@@ -26,7 +26,7 @@ Button deleteBtn;
 Button emptyScreen;
 
 void setup() {
-  size(1000, 1000);
+  size(1500, 1500);
   background(colors.RED());
   
   cp5 = new ControlP5(this);
@@ -86,7 +86,11 @@ public void reset(boolean isOn) {
 
 void draw() {
   background(colors.BLACK());
-  
+  stroke(colors.RED());
+  noFill();
+  line(500, 700, 500, 500);
+  line(250, 600, 750, 600);
+  arc(500, 600, 500, 500, PI, TAU); //arc(centerX, centerY, diameterX, diameterY, startAngle, endAngle)
   for (int i = 0; i < vertices.size(); i++) {
     PShape ellipse = createShape(ELLIPSE, vertices.get(i).posX, vertices.get(i).posY, RADIUS * 2, RADIUS * 2);
     ellipse.setFill(colors.BLUE());
@@ -128,23 +132,25 @@ public void mousePressed() {
     Vertex vertToDel = inVertex(mouseX, mouseY, true);
     if (vertToDel != null) {
       vertices.remove(vertices.indexOf(vertToDel));
-      for (int i = 0; i < edges.size(); i++) {
-         boolean startToCent = edges.get(i).startX == vertToDel.posX && edges.get(i).startY == vertToDel.posY;
-         boolean endToCent = edges.get(i).endX == vertToDel.posX && edges.get(i).endY == vertToDel.posY;
-         println(startToCent + " " + endToCent);
-         if (startToCent || endToCent) {
-           println("Removed " + edges.get(i).startX + " " + edges.get(i).startY);
-           edges.remove(edges.get(i));
-           i--;
-         }
-      }
+      removeEdges(vertToDel);
     }
   }
 }
 
+public void removeEdges(Vertex vertToDel) {
+  for (int i = 0; i < edges.size(); i++) {
+         boolean startToCent = edges.get(i).startX == vertToDel.posX && edges.get(i).startY == vertToDel.posY;
+         boolean endToCent = edges.get(i).endX == vertToDel.posX && edges.get(i).endY == vertToDel.posY;
+         if (startToCent || endToCent) {
+           edges.remove(edges.get(i));
+           i--;
+         }
+      }
+}
+
 public Vertex inVertex(int posX, int posY, boolean delete) {
   for (Vertex curr : vertices) {
-     float distFromCenter = sqrt((float)(pow((float)posX - curr.posX, 2.0) + Math.pow(((float)posY - curr.posY), 2.0)));
+     float distFromCenter = distance(posX, posY, curr.posX, curr.posY);
      if (distFromCenter <= RADIUS) {
        if (delete)
          return curr;
@@ -164,4 +170,17 @@ public void addVerticesToEdge(Vertex curr) {
       currentEdge.setEndPoint(curr.posX, curr.posY);
       numPointsInEdge++;
   } 
+}
+
+public float distance(float x1, float y1, float x2, float y2) {
+  return sqrt((float)(pow((float)x1 - x2, 2.0) + Math.pow(((float)y1 - y2), 2.0)));
+}
+
+public Point getMidPoint(float x1, float y1, float x2, float y2) {
+  return new Point((x1 + x2) / 2, (y1 + y2) / 2);
+}
+
+// gets the angle of the line from horizontal, requires trig x(
+public float getAngle(float x1, float y1, float x2, float y2) {
+   return 0.0; 
 }
