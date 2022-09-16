@@ -86,24 +86,26 @@ public void reset(boolean isOn) {
 
 void draw() {
   background(colors.BLACK());
-  stroke(colors.RED());
-  noFill();
-  line(500, 700, 500, 500);
-  line(250, 600, 750, 600);
-  arc(500, 600, 500, 500, PI, TAU); //arc(centerX, centerY, diameterX, diameterY, startAngle, endAngle)
+  //stroke(colors.RED());
+  //noFill();
+  //line(500, 700, 500, 500);
+  //line(250, 600, 750, 600);
+  //arc(500, 600, 500, 500, QUARTER_PI, PI + QUARTER_PI); //arc(centerX, centerY, diameterX, diameterY, startAngle, endAngle)
+  push();
+  for (Edge curr : edges) {
+    stroke(colors.WHITE());
+    noFill();
+    //arc((curr.startX + curr.endX) / 2, (curr.startY + curr.endY)/ 2, diameter, diameter, startAngle, startAngle + PI);
+    //line(curr.startX, curr.startY, curr.endX, curr.endY);  
+  }
+  pop();
   for (int i = 0; i < vertices.size(); i++) {
     PShape ellipse = createShape(ELLIPSE, vertices.get(i).posX, vertices.get(i).posY, RADIUS * 2, RADIUS * 2);
+    println(vertices.get(i).posX + " " + vertices.get(i).posY);
     ellipse.setFill(colors.BLUE());
     ellipse.setStroke(0);
     shape(ellipse);
   }
-  
-  for (Edge curr : edges) {
-    line((float)curr.startX, (float)curr.startY, 
-          (float)curr.endX, (float)curr.endY);
-    stroke(colors.WHITE());
-    //line(curr.startX, curr.startY, curr.endX, curr.endY);  
-}
 }
 
 public Button addButton(String name, int initValue, int posX, int posY, int len, 
@@ -173,14 +175,64 @@ public void addVerticesToEdge(Vertex curr) {
 }
 
 public float distance(float x1, float y1, float x2, float y2) {
-  return sqrt((float)(pow((float)x1 - x2, 2.0) + Math.pow(((float)y1 - y2), 2.0)));
+  return sqrt((float)(pow((float)x1 - x2, 2.0) +  pow(((float)y1 - y2), 2.0)));
 }
 
 public Point getMidPoint(float x1, float y1, float x2, float y2) {
   return new Point((x1 + x2) / 2, (y1 + y2) / 2);
 }
 
-// gets the angle of the line from horizontal, requires trig x(
-public float getAngle(float x1, float y1, float x2, float y2) {
-   return 0.0; 
+// gets the angle of the line from horizontal, requires trig
+// x1, y1 is the first point and x2 y2 is the second but we can get a vector from them
+public float[] findCircle(float x1, float y1, float x2, float y2, float x3, float y3) {
+   float x12 = x1 - x2;
+    float x13 = x1 - x3;
+ 
+    float y12 = y1 - y2;
+    float y13 = y1 - y3;
+ 
+    float y31 = y3 - y1;
+    float y21 = y2 - y1;
+ 
+    float x31 = x3 - x1;
+    float x21 = x2 - x1;
+ 
+    // x1^2 - x3^2
+    float sx13 = (float)(pow(x1, 2) -
+                    pow(x3, 2));
+ 
+    // y1^2 - y3^2
+    float sy13 = (float)(pow(y1, 2) -
+                    pow(y3, 2));
+ 
+    float sx21 = (float)(pow(x2, 2) -
+                    pow(x1, 2));
+                     
+    float sy21 = (float)(pow(y2, 2) -
+                    pow(y1, 2));
+ 
+    float f = ((sx13) * (x12)
+            + (sy13) * (x12)
+            + (sx21) * (x13)
+            + (sy21) * (x13))
+            / (2 * ((y31) * (x12) - (y21) * (x13)));
+    float g = ((sx13) * (y12)
+            + (sy13) * (y12)
+            + (sx21) * (y13)
+            + (sy21) * (y13))
+            / (2 * ((x31) * (y12) - (x21) * (y13)));
+ 
+    float c = -(float)pow(x1, 2) - (float)pow(y1, 2) -
+                                2 * g * x1 - 2 * f * y1;
+ 
+    // eqn of circle be x^2 + y^2 + 2*g*x + 2*f*y + c = 0
+    // where centre is (h = -g, k = -f) and radius r
+    // as r^2 = h^2 + k^2 - c
+    float centerX = -g;
+    float centerY = -f;
+    float sqr_of_r = centerX * centerX + centerY * centerY - c;
+ 
+    // r is the radius
+    float r = sqrt(sqr_of_r);
+    return new float[] {centerX, centerY, r};
 }
