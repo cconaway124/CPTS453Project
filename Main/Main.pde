@@ -86,22 +86,64 @@ public void reset(boolean isOn) {
 
 void draw() {
   background(colors.BLACK());
-  //stroke(colors.RED());
-  //noFill();
-  //line(500, 700, 500, 500);
-  //line(250, 600, 750, 600);
-  //arc(500, 600, 500, 500, QUARTER_PI, PI + QUARTER_PI); //arc(centerX, centerY, diameterX, diameterY, startAngle, endAngle)
+  
+  //arc(centerX, centerY, diameterX, diameterY, startAngle, endAngle)
   push();
   for (Edge curr : edges) {
-    stroke(colors.WHITE());
+    int x1 = curr.startX;
+    int y1 = curr.startY;
+    int x2 = curr.endX;
+    int y2 = curr.endY;
+    
+    float[] circle;
+    
+    boolean almostVert = false;
+    if (abs(x1 - x2) < 25) {
+      almostVert = true;
+        circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - 100, ((float)y1 + y2) / 2, x2, y2);
+    } else {
+        circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - 10, ((float)y1 + y2) / 2 + 10, x2, y2);
+    }
+    
+    float centerX = circle[0];
+    float centerY = circle[1];
+    float r = circle[2];
+    float startAngle = PI;
+    float endAngle = TAU;
     noFill();
-    //arc((curr.startX + curr.endX) / 2, (curr.startY + curr.endY)/ 2, diameter, diameter, startAngle, startAngle + PI);
+    stroke(colors.WHITE());
+    line(x1, y1, centerX, centerY);
+    line(x2, y2, centerX, centerY);
+    float x_dist = abs(x1 - x2);
+    
+    if (x_dist > 35) {
+      if (x1 < x2) {
+        startAngle = (acos((x2 - centerX) / r));
+        endAngle = (acos((x1 - centerX) / r));
+      } else if (x1 > x2) {
+        startAngle = (acos((x1 - centerX) / r));
+        endAngle = (acos((x2 - centerX) / r));
+      }
+    } else {
+       if (y1 < y2) {
+        startAngle = (asin((y2 - centerY) / r));
+        endAngle = (asin((y1 - centerY) / r));
+      } else if (y1 > y2) {
+        startAngle = (asin((y1 - centerY) / r));
+        endAngle = (asin((y2 - centerY) / r));
+      }
+    }
+      
+    println(degrees(startAngle), degrees(endAngle));
+    
+    PShape arc = createShape(ARC, centerX, centerY, r * 2, r * 2, startAngle, endAngle);
+    arc.setStroke(colors.WHITE());
+    shape(arc);
     //line(curr.startX, curr.startY, curr.endX, curr.endY);  
   }
   pop();
   for (int i = 0; i < vertices.size(); i++) {
     PShape ellipse = createShape(ELLIPSE, vertices.get(i).posX, vertices.get(i).posY, RADIUS * 2, RADIUS * 2);
-    println(vertices.get(i).posX + " " + vertices.get(i).posY);
     ellipse.setFill(colors.BLUE());
     ellipse.setStroke(0);
     shape(ellipse);
@@ -210,7 +252,7 @@ public float[] findCircle(float x1, float y1, float x2, float y2, float x3, floa
                      
     float sy21 = (float)(pow(y2, 2) -
                     pow(y1, 2));
- 
+            
     float f = ((sx13) * (x12)
             + (sy13) * (x12)
             + (sx21) * (x13)
@@ -221,7 +263,7 @@ public float[] findCircle(float x1, float y1, float x2, float y2, float x3, floa
             + (sx21) * (y13)
             + (sy21) * (y13))
             / (2 * ((x31) * (y12) - (x21) * (y13)));
- 
+             
     float c = -(float)pow(x1, 2) - (float)pow(y1, 2) -
                                 2 * g * x1 - 2 * f * y1;
  
