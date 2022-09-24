@@ -18,7 +18,7 @@ Edge currentEdge = new Edge();
 int numPointsInEdge = 0;
 
 public final static int NO_DRAW_Y_BOUND = 200;
-public final static int RADIUS = 50;
+public final static int RADIUS = 25;
 
 Button vertexBtn;
 Button edgeBtn;
@@ -27,6 +27,7 @@ Button emptyScreen;
 
 void setup() {
   size(1500, 1500);
+  surface.setResizable(true);
   background(colors.RED());
   
   cp5 = new ControlP5(this);
@@ -90,13 +91,19 @@ void draw() {
   //arc(centerX, centerY, diameterX, diameterY, startAngle, endAngle)
   push();
   for (Edge curr : edges) {
-    int x1 = curr.startX;
-    int y1 = curr.startY;
-    int x2 = curr.endX;
-    int y2 = curr.endY;
-    
+    int x1 = curr.start.posX;
+    int y1 = curr.start.posY;
+    int x2 = curr.end.posX;
+    int y2 = curr.end.posY;
     float[] circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - 10, ((float)y1 + y2) / 2 + 10, x2, y2);
-    
+    int factorOfTen = 10;
+    while (abs(circle[0]) >= 5000) {
+      circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - factorOfTen, ((float)y1 + y2) / 2 + factorOfTen, x2, y2);
+      factorOfTen *= 10;
+      if (factorOfTen >= 10000) {
+         break; 
+      }
+    }
     float centerX = circle[0];
     float centerY = circle[1];
     float r = circle[2];
@@ -104,18 +111,27 @@ void draw() {
     float endAngle = TAU;
     noFill();
     stroke(colors.WHITE());
-    line(x1, y1, centerX, centerY);
-    line(x2, y2, centerX, centerY);
     float x_dist = abs(x1 - x2);
-    int index1 = vertexIndex(x1, y1);
-    int index2 = vertexIndex(x2, y2);
+    curr.setCircle(centerX, centerY, r);
     
-    arc(500, 500, 100, 100, 3 * HALF_PI, TAU + HALF_PI);
-    arc(500, 500, 100, 100, HALF_PI, 3 * HALF_PI);
-    
-      
-    println(degrees(startAngle), degrees(endAngle));
-    
+    if (x_dist > 50) {
+      if (x1 < x2) {
+        startAngle = (acos((x2 - centerX) / r));
+        endAngle = (acos((x1 - centerX) / r));
+      } else if (x1 > x2) {
+        startAngle = (acos((x1 - centerX) / r));
+        endAngle = (acos((x2 - centerX) / r));
+      }
+    } else {
+       if (y1 < y2) {
+        startAngle = PI - (asin((y2 - centerY) / r));
+        endAngle = PI - (asin((y1 - centerY) / r));
+      } else if (y1 > y2) {
+        startAngle = PI - (asin((y1 - centerY) / r));
+        endAngle = PI - (asin((y2 - centerY) / r));
+      }
+    }
+        
     PShape arc = createShape(ARC, centerX, centerY, r * 2, r * 2, startAngle, endAngle);
     arc.setStroke(colors.WHITE());
     shape(arc);
@@ -158,13 +174,15 @@ public void mousePressed() {
       vertices.remove(vertices.indexOf(vertToDel));
       removeEdges(vertToDel);
     }
+    
+    deleteEdge(mouseX, mouseY); 
   }
 }
 
 public void removeEdges(Vertex vertToDel) {
   for (int i = 0; i < edges.size(); i++) {
-         boolean startToCent = edges.get(i).startX == vertToDel.posX && edges.get(i).startY == vertToDel.posY;
-         boolean endToCent = edges.get(i).endX == vertToDel.posX && edges.get(i).endY == vertToDel.posY;
+         boolean startToCent = edges.get(i).start.posX == vertToDel.posX && edges.get(i).start.posY == vertToDel.posY;
+         boolean endToCent = edges.get(i).end.posX == vertToDel.posX && edges.get(i).end.posY == vertToDel.posY;
          if (startToCent || endToCent) {
            edges.remove(edges.get(i));
            i--;
@@ -189,9 +207,9 @@ public void addVerticesToEdge(Vertex curr) {
  if (numPointsInEdge != 1) {
    currentEdge = new Edge(); 
    numPointsInEdge = 1;
-   currentEdge.setStartPoint(curr.posX, curr.posY);
+   currentEdge.setStartPoint(curr);
   } else {
-      currentEdge.setEndPoint(curr.posX, curr.posY);
+      currentEdge.setEndPoint(curr);
       numPointsInEdge++;
   } 
 }
@@ -259,12 +277,12 @@ public float[] findCircle(float x1, float y1, float x2, float y2, float x3, floa
     return new float[] {centerX, centerY, r};
 }
 
-public int vertexIndex(int x, int y) {
-  int count = 0;
-  for (Vertex curr : vertices) {
-    if (x == curr.posX && y == curr.posY)
-      return count;
-    count++;
+public void deleteEdge(int x, int y) {
+  for (int i = 0; i < edges.size(); i++) {
+    Edge curr = edges.get(i);
+    if (abs(curr.radius - distance(x, y, curr.centerX, curr.centerY)) < 25) {
+      edges.remove(i);
+      i--;
+    }
   }
-   return -1;
 }
