@@ -95,15 +95,7 @@ void draw() {
     int x2 = curr.endX;
     int y2 = curr.endY;
     
-    float[] circle;
-    
-    boolean almostVert = false;
-    if (abs(x1 - x2) < 25) {
-      almostVert = true;
-        circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - 100, ((float)y1 + y2) / 2, x2, y2);
-    } else {
-        circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - 10, ((float)y1 + y2) / 2 + 10, x2, y2);
-    }
+    float[] circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - 10, ((float)y1 + y2) / 2 + 10, x2, y2);
     
     float centerX = circle[0];
     float centerY = circle[1];
@@ -115,24 +107,12 @@ void draw() {
     line(x1, y1, centerX, centerY);
     line(x2, y2, centerX, centerY);
     float x_dist = abs(x1 - x2);
+    int index1 = vertexIndex(x1, y1);
+    int index2 = vertexIndex(x2, y2);
     
-    if (x_dist > 35) {
-      if (x1 < x2) {
-        startAngle = (acos((x2 - centerX) / r));
-        endAngle = (acos((x1 - centerX) / r));
-      } else if (x1 > x2) {
-        startAngle = (acos((x1 - centerX) / r));
-        endAngle = (acos((x2 - centerX) / r));
-      }
-    } else {
-       if (y1 < y2) {
-        startAngle = (asin((y2 - centerY) / r));
-        endAngle = (asin((y1 - centerY) / r));
-      } else if (y1 > y2) {
-        startAngle = (asin((y1 - centerY) / r));
-        endAngle = (asin((y2 - centerY) / r));
-      }
-    }
+    arc(500, 500, 100, 100, 3 * HALF_PI, TAU + HALF_PI);
+    arc(500, 500, 100, 100, HALF_PI, 3 * HALF_PI);
+    
       
     println(degrees(startAngle), degrees(endAngle));
     
@@ -277,4 +257,14 @@ public float[] findCircle(float x1, float y1, float x2, float y2, float x3, floa
     // r is the radius
     float r = sqrt(sqr_of_r);
     return new float[] {centerX, centerY, r};
+}
+
+public int vertexIndex(int x, int y) {
+  int count = 0;
+  for (Vertex curr : vertices) {
+    if (x == curr.posX && y == curr.posY)
+      return count;
+    count++;
+  }
+   return -1;
 }
