@@ -32,4 +32,8 @@ public class Edge {
     this.radius = radius;
   }
   
+  public boolean contains(Vertex target) {
+     return start.equals(target) || end.equals(target); 
+  }
+  
 }

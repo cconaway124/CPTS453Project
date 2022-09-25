@@ -18,6 +18,7 @@ Edge currentEdge = new Edge();
 int numPointsInEdge = 0;
 
 public final static int NO_DRAW_Y_BOUND = 200;
+public final static int NO_DRAW_X_BOUND = 200;
 public final static int RADIUS = 25;
 
 Button vertexBtn;
@@ -87,6 +88,13 @@ public void reset(boolean isOn) {
 
 void draw() {
   background(colors.BLACK());
+  push();
+  stroke(colors.WHITE());
+  line(NO_DRAW_X_BOUND, NO_DRAW_Y_BOUND, width, NO_DRAW_Y_BOUND);
+  line(NO_DRAW_X_BOUND, NO_DRAW_Y_BOUND, NO_DRAW_X_BOUND, height);
+  textSize(48);
+  text(String.format("n = %d, m = %d, k = %d", vertices.size(), edges.size(), getComponents()), 750, 100);
+  pop();
   
   //arc(centerX, centerY, diameterX, diameterY, startAngle, endAngle)
   push();
@@ -95,7 +103,7 @@ void draw() {
     int y1 = curr.start.posY;
     int x2 = curr.end.posX;
     int y2 = curr.end.posY;
-    float[] circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - 10, ((float)y1 + y2) / 2 + 10, x2, y2);
+    float[] circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - 10, ((float)y1 + y2) / 2 - 10, x2, y2);
     int factorOfTen = 10;
     while (abs(circle[0]) >= 5000) {
       circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - factorOfTen, ((float)y1 + y2) / 2 + factorOfTen, x2, y2);
@@ -112,9 +120,11 @@ void draw() {
     noFill();
     stroke(colors.WHITE());
     float x_dist = abs(x1 - x2);
+    float y_dist = abs(y1 - y2);
     curr.setCircle(centerX, centerY, r);
     
-    if (x_dist > 50) {
+    // This mostly works, want to rework this eventually
+    if (x_dist > 50 && y_dist > 75) {
       if (x1 < x2) {
         startAngle = (acos((x2 - centerX) / r));
         endAngle = (acos((x1 - centerX) / r));
@@ -131,6 +141,9 @@ void draw() {
         endAngle = PI - (asin((y2 - centerY) / r));
       }
     }
+    
+        
+    println(degrees(startAngle), degrees(endAngle));
         
     PShape arc = createShape(ARC, centerX, centerY, r * 2, r * 2, startAngle, endAngle);
     arc.setStroke(colors.WHITE());
@@ -154,28 +167,30 @@ public Button addButton(String name, int initValue, int posX, int posY, int len,
 }
 
 public void mousePressed() {
-  if (vertexOn && mouseY >= NO_DRAW_Y_BOUND) {
-    vertices.add(new Vertex(mouseX, mouseY));
-  }
-  
-  if (edgeOn && mouseY >= NO_DRAW_Y_BOUND) {
-    inVertex(mouseX, mouseY, false);
-    if (currentEdge.noNull()) {
-       edges.add(currentEdge);
-    }
-  } else {
-      numPointsInEdge = 0;
-      currentEdge = new Edge();
-  }
-  
-  if (deleteOn && mouseY >= NO_DRAW_Y_BOUND) {
-    Vertex vertToDel = inVertex(mouseX, mouseY, true);
-    if (vertToDel != null) {
-      vertices.remove(vertices.indexOf(vertToDel));
-      removeEdges(vertToDel);
+  if (mouseY >= NO_DRAW_Y_BOUND && mouseX >= NO_DRAW_X_BOUND) {
+    if (vertexOn) {
+      vertices.add(new Vertex(mouseX, mouseY));
     }
     
-    deleteEdge(mouseX, mouseY); 
+    if (edgeOn) {
+      inVertex(mouseX, mouseY, false);
+      if (currentEdge.noNull()) {
+         edges.add(currentEdge);
+      }
+    } else {
+        numPointsInEdge = 0;
+        currentEdge = new Edge();
+    }
+    
+    if (deleteOn) {
+      Vertex vertToDel = inVertex(mouseX, mouseY, true);
+      if (vertToDel != null) {
+        vertices.remove(vertices.indexOf(vertToDel));
+        removeEdges(vertToDel);
+      }
+      
+      deleteEdge(mouseX, mouseY); 
+    }
   }
 }
 
@@ -282,7 +297,41 @@ public void deleteEdge(int x, int y) {
     Edge curr = edges.get(i);
     if (abs(curr.radius - distance(x, y, curr.centerX, curr.centerY)) < 25) {
       edges.remove(i);
-      i--;
+      break;
     }
   }
+}
+
+public int getComponents() {
+  return 0;
+}
+
+public ArrayList<ArrayList<Integer>> getMatrixGraph() {
+ ArrayList<ArrayList<Integer>> matrix = new ArrayList<>();
+ for (int i = 0; i < vertices.size(); i++) {
+   matrix.add(new ArrayList<Integer>());
+   for (int j = 0; j < vertices.size(); j++) {
+      matrix.get(i).add(0); 
+   }
+ }
+ 
+ for (int i = 0; i < matrix.size(); i++) {
+     for (int j = 0; j < matrix.get(i).size(); j++) {
+       Vertex j_vert = vertices.get(j);
+       
+       if (edgeWithVertex(j_vert)) {
+           matrix.get(i).set(j, 1);
+       }
+     }
+ }
+ 
+ return matrix;
+}
+
+public boolean edgeWithVertex(Vertex target) {
+  for (Edge edge : edges) {
+     if (edge.contains(target))
+       return true;
+  }
+  return false;
 }
