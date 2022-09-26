@@ -103,51 +103,12 @@ void draw() {
     int y1 = curr.start.posY;
     int x2 = curr.end.posX;
     int y2 = curr.end.posY;
-    float[] circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - 10, ((float)y1 + y2) / 2 - 10, x2, y2);
-    int factorOfTen = 10;
-    while (abs(circle[0]) >= 5000) {
-      circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - factorOfTen, ((float)y1 + y2) / 2 + factorOfTen, x2, y2);
-      factorOfTen *= 10;
-      if (factorOfTen >= 10000) {
-         break; 
-      }
-    }
-    float centerX = circle[0];
-    float centerY = circle[1];
-    float r = circle[2];
-    float startAngle = PI;
-    float endAngle = TAU;
-    noFill();
-    stroke(colors.WHITE());
-    float x_dist = abs(x1 - x2);
-    float y_dist = abs(y1 - y2);
-    curr.setCircle(centerX, centerY, r);
     
-    // This mostly works, want to rework this eventually
-    if (x_dist > 50 && y_dist > 75) {
-      if (x1 < x2) {
-        startAngle = (acos((x2 - centerX) / r));
-        endAngle = (acos((x1 - centerX) / r));
-      } else if (x1 > x2) {
-        startAngle = (acos((x1 - centerX) / r));
-        endAngle = (acos((x2 - centerX) / r));
-      }
-    } else {
-       if (y1 < y2) {
-        startAngle = PI - (asin((y2 - centerY) / r));
-        endAngle = PI - (asin((y1 - centerY) / r));
-      } else if (y1 > y2) {
-        startAngle = PI - (asin((y1 - centerY) / r));
-        endAngle = PI - (asin((y2 - centerY) / r));
-      }
-    }
-    
+    getEdgeAngle(x1, y1, x2, y2);
         
-    println(degrees(startAngle), degrees(endAngle));
-        
-    PShape arc = createShape(ARC, centerX, centerY, r * 2, r * 2, startAngle, endAngle);
-    arc.setStroke(colors.WHITE());
-    shape(arc);
+    // PShape arc = createShape(ARC, centerX, centerY, r * 2, r * 2, 0, TAU);
+    // arc.setStroke(colors.WHITE());
+    // shape(arc);
     //line(curr.startX, curr.startY, curr.endX, curr.endY);  
   }
   pop();
@@ -319,14 +280,6 @@ public ArrayList<ArrayList<Integer>> getMatrixGraph() {
    }
  }
  
- for (int i = 0; i < matrix.size(); i++) {
-   for (int j = 0; j < matrix.get(i).size(); j++) {     
-     if (edgeWithVertices(vertices.get(j), vertices.get(i))) {
-         matrix.get(i).set(j, 1);
-     }
-   }
- }
- 
  return matrix;
 }
 
@@ -336,4 +289,78 @@ public boolean edgeWithVertices(Vertex target1, Vertex target2) {
        return true;
   }
   return false;
+}
+
+public void getEdgeAngle(int x1, int y1, int x2, int y2) {
+  Point mid = getMidPoint(x1, y1, x2, y2);
+  stroke(colors.WHITE());
+  noFill();
+  line(x1, y1, x2, y2);
+  line(mid.x - 500, mid.y, mid.x + 500, mid.y);
+  line(x1, y1, x1, mid.y);
+  boolean point1Below = (y1 - mid.y) > 0;
+
+  float[] circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - 10, ((float)y1 + y2) / 2 - 10, x2, y2);
+  int factorOfTen = 10;
+  while (abs(circle[0]) >= 5000) {
+    circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - factorOfTen, ((float)y1 + y2) / 2 + factorOfTen, x2, y2);
+    factorOfTen *= 10;
+    if (factorOfTen >= 10000) {
+        break; 
+    }
+  }
+  float centerX = circle[0];
+  float centerY = circle[1];
+  float r = circle[2];
+  float startAngle = PI;
+  float endAngle = TAU;
+
+  float adjX1 = x1 - centerX;
+  float adjY1 = y1 - centerY;
+  float adjX2 = x2 - centerX;
+  float adjY2 = y2 - centerY;
+
+  int point1Quad = new Point(adjX1, adjY1).quadrant();
+  int point2Quad = new Point(adjX2, adjY2).quadrant();
+
+  if (point1Quad < point2Quad) {
+    startAngle = acos(adjX1 / r);
+    endAngle = TAU - acos(adjX2 / r);
+  } else if (point1Quad > point2Quad) {
+    startAngle = acos(adjX2 / r);
+    endAngle = TAU - acos(adjX1 / r);
+  } else {
+
+  }
+
+  println(degrees(acos((x1 - centerX) / r)), degrees(TAU - acos((x2 - centerX) / r)));
+  if (point1Below) {
+    arc(centerX, centerY, r * 2, r * 2, startAngle, endAngle);
+  } else {
+
+  }
+  // noFill();
+  // stroke(colors.WHITE());
+  // float x_dist = abs(x1 - x2);
+  // float y_dist = abs(y1 - y2);
+  // curr.setCircle(centerX, centerY, r);
+  
+  // // TODO: This mostly works, want to rework this eventually
+  // if (x_dist > 50) {
+  //   if (x1 < x2) {
+  //     startAngle = (acos((x2 - centerX) / r));
+  //     endAngle = (acos((x1 - centerX) / r));
+  //   } else if (x1 > x2) {
+  //     startAngle = (acos((x1 - centerX) / r));
+  //     endAngle = (acos((x2 - centerX) / r));
+  //   }
+  // } else {
+  //     if (y1 < y2) {
+  //     startAngle = PI - (asin((y2 - centerY) / r));
+  //     endAngle = PI - (asin((y1 - centerY) / r));
+  //   } else if (y1 > y2) {
+  //     startAngle = PI - (asin((y1 - centerY) / r));
+  //     endAngle = PI - (asin((y2 - centerY) / r));
+  //   }
+  // }
 }
