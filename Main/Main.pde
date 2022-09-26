@@ -311,26 +311,28 @@ public ArrayList<ArrayList<Integer>> getMatrixGraph() {
  for (int i = 0; i < vertices.size(); i++) {
    matrix.add(new ArrayList<Integer>());
    for (int j = 0; j < vertices.size(); j++) {
-      matrix.get(i).add(0); 
+      if (edgeWithVertices(vertices.get(j), vertices.get(i))) {
+         matrix.get(i).add(1);
+     } else {
+       matrix.get(i).add(0);
+     }
    }
  }
  
  for (int i = 0; i < matrix.size(); i++) {
-     for (int j = 0; j < matrix.get(i).size(); j++) {
-       Vertex j_vert = vertices.get(j);
-       
-       if (edgeWithVertex(j_vert)) {
-           matrix.get(i).set(j, 1);
-       }
+   for (int j = 0; j < matrix.get(i).size(); j++) {     
+     if (edgeWithVertices(vertices.get(j), vertices.get(i))) {
+         matrix.get(i).set(j, 1);
      }
+   }
  }
  
  return matrix;
 }
 
-public boolean edgeWithVertex(Vertex target) {
+public boolean edgeWithVertices(Vertex target1, Vertex target2) {
   for (Edge edge : edges) {
-     if (edge.contains(target))
+     if (edge.contains(target1) && edge.contains(target2))
        return true;
   }
   return false;
