@@ -323,6 +323,8 @@ public void getEdgeAngle(int x1, int y1, int x2, int y2) {
   int point1Quad = new Point(adjX1, adjY1).quadrant();
   int point2Quad = new Point(adjX2, adjY2).quadrant();
 
+  println(point1Quad, point2Quad);
+
   if (point1Quad < point2Quad) {
     startAngle = acos(adjX1 / r);
     endAngle = TAU - acos(adjX2 / r);
@@ -330,15 +332,17 @@ public void getEdgeAngle(int x1, int y1, int x2, int y2) {
     startAngle = acos(adjX2 / r);
     endAngle = TAU - acos(adjX1 / r);
   } else {
-
+    if (point1Below) {
+      startAngle = acos(adjX1 / r);
+      endAngle = TAU - acos(adjX2 / r);
+    } else {
+      startAngle = acos(adjX2 / r);
+      endAngle = TAU - acos(adjX1 / r);
+    }
   }
 
-  println(degrees(acos((x1 - centerX) / r)), degrees(TAU - acos((x2 - centerX) / r)));
-  if (point1Below) {
-    arc(centerX, centerY, r * 2, r * 2, startAngle, endAngle);
-  } else {
-
-  }
+  //println(degrees(acos((x1 - centerX) / r)), degrees(TAU - acos((x2 - centerX) / r)));
+  arc(centerX, centerY, r * 2, r * 2, startAngle, endAngle);
   // noFill();
   // stroke(colors.WHITE());
   // float x_dist = abs(x1 - x2);
