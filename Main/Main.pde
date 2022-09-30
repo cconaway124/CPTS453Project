@@ -320,24 +320,26 @@ public void getEdgeAngle(int x1, int y1, int x2, int y2) {
   float adjX2 = x2 - centerX;
   float adjY2 = y2 - centerY;
 
-  int point1Quad = new Point(adjX1, adjY1).quadrant();
-  int point2Quad = new Point(adjX2, adjY2).quadrant();
+  Point point1 = new Point(adjX1, adjY1);
+  Point point2 = new Point(adjX2, adjY2);
+  int point1Quad = point1.quadrant();
+  int point2Quad = point2.quadrant();
 
-  println(point1Quad, point2Quad);
+  println(point1Quad, point2Quad, degrees(angleFrom0(point1, r)), degrees(angleFrom0(point2, r)), degrees(acos(.85)));
 
   if (point1Quad < point2Quad) {
-    startAngle = acos(adjX1 / r);
-    endAngle = TAU - acos(adjX2 / r);
+    startAngle = angleFrom0(point1, r);
+    endAngle = angleFrom0(point2, r);
   } else if (point1Quad > point2Quad) {
-    startAngle = acos(adjX2 / r);
-    endAngle = TAU - acos(adjX1 / r);
+    startAngle = angleFrom0(point2, r);
+    endAngle = angleFrom0(point1, r);
   } else {
     if (point1Below) {
-      startAngle = acos(adjX1 / r);
-      endAngle = TAU - acos(adjX2 / r);
+      startAngle = angleFrom0(point1, r);
+      endAngle = angleFrom0(point2, r);
     } else {
-      startAngle = acos(adjX2 / r);
-      endAngle = TAU - acos(adjX1 / r);
+      startAngle = angleFrom0(point2, r);
+      endAngle = angleFrom0(point1, r);
     }
   }
 
@@ -367,4 +369,20 @@ public void getEdgeAngle(int x1, int y1, int x2, int y2) {
   //     endAngle = PI - (asin((y2 - centerY) / r));
   //   }
   // }
+}
+
+public float angleFrom0(Point point, float r) {
+  switch (point.quadrant()) {
+    case 1:
+      return acos(point.x / r);
+    case 2:
+      return acos(point.x / r);
+    case 3:
+      float diff = PI - acos(point.x / r);
+      return 2 * diff + acos(point.x / r);
+    case 4:
+      return TAU - acos(point.x / r);
+    default:
+      return -375.0;
+  }
 }
