@@ -41,5 +41,15 @@ public class Edge {
   public boolean contains(Vertex target) {
      return start.equals(target) || end.equals(target); 
   }
+
+  public Vertex getOtherVertex(Vertex target) {
+    if (start.equals(target)) {
+      return end;
+    } else if (end.equals(target)) {
+      return start;
+    } else {
+      return null;
+    }
+  }
   
 }
