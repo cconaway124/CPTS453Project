@@ -2,6 +2,7 @@ public class Edge {
  
   public Vertex start;
   public Vertex end;
+  public Vertex midpoint;
   public float centerX;
   public float centerY;
   public float radius;
@@ -9,9 +10,10 @@ public class Edge {
   
   public Edge() {}
   
-  public Edge (Vertex start, Vertex end) {
+  public Edge (Vertex start, Vertex end, Vertex midpoint) {
      this.start = start;
      this.end = end;
+     this.midpoint = midpoint;
   }
 
   public void setStartPoint(Vertex start) {
@@ -20,6 +22,10 @@ public class Edge {
   
   public void setEndPoint(Vertex end) {
      this.end = end;
+  }
+
+  public void setMidpoint(Vertex midpoint) {
+    this.midpoint = midpoint;
   }
   
   public boolean noNull() {

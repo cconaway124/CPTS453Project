@@ -103,13 +103,12 @@ void draw() {
     int y1 = curr.start.posY;
     int x2 = curr.end.posX;
     int y2 = curr.end.posY;
-    
-    getEdgeAngle(x1, y1, x2, y2);
-        
-    // PShape arc = createShape(ARC, centerX, centerY, r * 2, r * 2, 0, TAU);
-    // arc.setStroke(colors.WHITE());
-    // shape(arc);
-    //line(curr.startX, curr.startY, curr.endX, curr.endY);  
+
+    PShape arc = getEdgeAngle(x1, y1, x2, y2, curr);
+    shape(arc);
+    fill(colors.WHITE());
+    ellipse(curr.midpoint.posX, curr.midpoint.posY, 30, 30);
+ 
   }
   pop();
   for (int i = 0; i < vertices.size(); i++) {
@@ -291,29 +290,28 @@ public boolean edgeWithVertices(Vertex target1, Vertex target2) {
   return false;
 }
 
-public void getEdgeAngle(int x1, int y1, int x2, int y2) {
+public PShape getEdgeAngle(int x1, int y1, int x2, int y2, Edge curr) {
   Point mid = getMidPoint(x1, y1, x2, y2);
   stroke(colors.WHITE());
   noFill();
-  line(x1, y1, x2, y2);
-  line(mid.x - 500, mid.y, mid.x + 500, mid.y);
-  line(x1, y1, x1, mid.y);
   boolean point1Below = (y1 - mid.y) > 0;
 
-  float[] circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - 10, ((float)y1 + y2) / 2 - 10, x2, y2);
-  int factorOfTen = 10;
-  while (abs(circle[0]) >= 5000) {
-    circle = findCircle(x1, y1, ((float)x1 + x2) / 2 - factorOfTen, ((float)y1 + y2) / 2 + factorOfTen, x2, y2);
-    factorOfTen *= 10;
-    if (factorOfTen >= 10000) {
-        break; 
-    }
-  }
+  float x3dir = -(y2 - y1);
+  float y3dir = mid.x;
+  float magnitude = sqrt(x3dir * x3dir + y3dir * y3dir);
+  x3dir /= magnitude;
+  y3dir /= magnitude;
+
+  float midpointDist = 100;
+  x3dir *= midpointDist;
+  y3dir *= midpointDist;
+
+  curr.setMidpoint(new Vertex((int)(mid.x + x3dir), (int)(mid.y + y3dir)));
+  float[] circle = findCircle(x1, y1, mid.x + x3dir, mid.y + y3dir, x2, y2);
+  
   float centerX = circle[0];
   float centerY = circle[1];
   float r = circle[2];
-  float startAngle = PI;
-  float endAngle = TAU;
 
   float adjX1 = x1 - centerX;
   float adjY1 = y1 - centerY;
@@ -325,50 +323,16 @@ public void getEdgeAngle(int x1, int y1, int x2, int y2) {
   int point1Quad = point1.quadrant();
   int point2Quad = point2.quadrant();
 
-  println(point1Quad, point2Quad, degrees(angleFrom0(point1, r)), degrees(angleFrom0(point2, r)), degrees(acos(.85)));
+  float startAngle = angleFrom0(point1, r);
+  float endAngle = angleFrom0(point2, r);
 
-  if (point1Quad < point2Quad) {
-    startAngle = angleFrom0(point1, r);
-    endAngle = angleFrom0(point2, r);
-  } else if (point1Quad > point2Quad) {
-    startAngle = angleFrom0(point2, r);
-    endAngle = angleFrom0(point1, r);
-  } else {
-    if (point1Below) {
-      startAngle = angleFrom0(point1, r);
-      endAngle = angleFrom0(point2, r);
-    } else {
-      startAngle = angleFrom0(point2, r);
-      endAngle = angleFrom0(point1, r);
-    }
+  if (startAngle > endAngle) {
+    float temp = startAngle;
+    startAngle = endAngle;
+    endAngle = temp;
   }
 
-  //println(degrees(acos((x1 - centerX) / r)), degrees(TAU - acos((x2 - centerX) / r)));
-  arc(centerX, centerY, r * 2, r * 2, startAngle, endAngle);
-  // noFill();
-  // stroke(colors.WHITE());
-  // float x_dist = abs(x1 - x2);
-  // float y_dist = abs(y1 - y2);
-  // curr.setCircle(centerX, centerY, r);
-  
-  // // TODO: This mostly works, want to rework this eventually
-  // if (x_dist > 50) {
-  //   if (x1 < x2) {
-  //     startAngle = (acos((x2 - centerX) / r));
-  //     endAngle = (acos((x1 - centerX) / r));
-  //   } else if (x1 > x2) {
-  //     startAngle = (acos((x1 - centerX) / r));
-  //     endAngle = (acos((x2 - centerX) / r));
-  //   }
-  // } else {
-  //     if (y1 < y2) {
-  //     startAngle = PI - (asin((y2 - centerY) / r));
-  //     endAngle = PI - (asin((y1 - centerY) / r));
-  //   } else if (y1 > y2) {
-  //     startAngle = PI - (asin((y1 - centerY) / r));
-  //     endAngle = PI - (asin((y2 - centerY) / r));
-  //   }
-  // }
+  return createShape(ARC, centerX, centerY, r * 2, r * 2, startAngle, endAngle);
 }
 
 public float angleFrom0(Point point, float r) {
