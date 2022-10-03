@@ -14,9 +14,8 @@ int currX, currY;
 
 ArrayList<Vertex> vertices = new ArrayList<Vertex>();
 ArrayList<Edge> edges = new ArrayList<Edge>();
-Edge currentEdge = new Edge();
+ArrayList<Vertex> currEdge = new ArrayList<Vertex>();
 
-int numPointsInEdge = 0;
 public int components = 0;
 
 public final static int NO_DRAW_Y_BOUND = 200;
@@ -101,12 +100,7 @@ void draw() {
    
    push();
    for (Edge curr : edges) {
-      int x1 = curr.start.posX;
-      int y1 = curr.start.posY;
-      int x2 = curr.end.posX;
-      int y2 = curr.end.posY;
-      
-      PShape arc = getEdgeAngle(x1, y1, x2, y2, curr);
+      PShape arc = getEdgeAngle(curr);
       shape(arc);
       fill(colors.WHITE());
       ellipse(curr.midpoint.posX, curr.midpoint.posY, 15, 15);
@@ -131,22 +125,37 @@ int wid, boolean swit) {
 public void mousePressed() {
    if (mouseY >= NO_DRAW_Y_BOUND && mouseX >= NO_DRAW_X_BOUND) {
       if (vertexOn) {
-         Vertex vert = new Vertex(mouseX, mouseY, vertices.size());
-         vertices.add(vert);
+         Vertex onVert = findVertex(mouseX, mouseY);
+         if (onVert != null && mousePressed) {
+             onVert.setPosition(mouseX, mouseY);
+         } else {
+           Vertex vert = new Vertex(mouseX, mouseY);
+           vertices.add(vert);
+         }
       }
       
       if (edgeOn) {
-         inVertex(mouseX, mouseY, false);
-         if (currentEdge.noNull()) {
-            edges.add(currentEdge);
+         Vertex vert = findVertex(mouseX, mouseY);
+         if (vert != null) {
+           currEdge.add(vert);
+           if (currEdge.size() == 2) {
+             Edge loop;
+             if (currEdge.get(0).equals(currEdge.get(1))) {
+               loop = new Edge(currEdge.get(0), currEdge.get(1));
+               loop.setMidpoint(currEdge.get(0).posX + 100, currEdge.get(0).posY + 100);
+             } else {
+               loop = new Edge(currEdge.get(0), currEdge.get(1));
+             }
+             edges.add(loop);  
+             currEdge = new ArrayList<Vertex>();
+            }
          }
       } else {
-         numPointsInEdge = 0;
-         currentEdge = new Edge();
+         currEdge = new ArrayList<Vertex>();
       }
       
       if (deleteOn) {
-         Vertex vertToDel = inVertex(mouseX, mouseY, true);
+         Vertex vertToDel = findVertex(mouseX, mouseY);
          if (vertToDel != null) {
             vertices.remove(vertices.indexOf(vertToDel));
             removeEdges(vertToDel);
@@ -156,6 +165,32 @@ public void mousePressed() {
       }
       components = getComponents();
    }
+}
+
+public void mouseDragged() {
+  if (vertexOn) {
+     Vertex onVert = findVertex(mouseX, mouseY);
+     if (onVert != null && mousePressed) {
+         onVert.setPosition(mouseX, mouseY);
+     }
+  }
+  
+  if (edgeOn) {
+    Edge onEdge = findEdgeMidpoint(mouseX, mouseY);
+    if (onEdge != null) {
+      if (!onEdge.isLoop()) {
+        Point mid = getMidPoint(onEdge.start.posX, onEdge.start.posY, onEdge.end.posX, onEdge.end.posY);
+        float radius = distance(onEdge.start.posX, onEdge.start.posY, onEdge.end.posX, onEdge.end.posY) / 2;
+        boolean betweenPoints = (abs(mid.x - mouseX) < radius) && (abs(mid.y - mouseY) < radius);
+        if (betweenPoints)
+         onEdge.setMidpoint(mouseX, mouseY); 
+      } else {
+         boolean withinR = distance(onEdge.start.posX, onEdge.start.posY, mouseX, mouseY) < 200;
+         if (withinR)
+           onEdge.setMidpoint(mouseX, mouseY); 
+      }
+    }
+  }
 }
 
 public void removeEdges(Vertex vertToDel) {
@@ -169,28 +204,14 @@ public void removeEdges(Vertex vertToDel) {
    }
 }
 
-public Vertex inVertex(int posX, int posY, boolean delete) {
+public Vertex findVertex(int posX, int posY) {
    for (Vertex curr : vertices) {
       float distFromCenter = distance(posX, posY, curr.posX, curr.posY);
       if (distFromCenter <= RADIUS) {
-         if (delete)
-            return curr;
-         else
-            addVerticesToEdge(curr);
+        return curr;
       }
    }
    return null;
-}
-
-public void addVerticesToEdge(Vertex curr) {
-   if (numPointsInEdge != 1) {
-      currentEdge = new Edge();
-      numPointsInEdge = 1;
-      currentEdge.setStartPoint(curr);
-   } else {
-      currentEdge.setEndPoint(curr);
-      numPointsInEdge++;
-   }
 }
 
 public float distance(float x1, float y1, float x2, float y2) {
@@ -199,61 +220,6 @@ public float distance(float x1, float y1, float x2, float y2) {
 
 public Point getMidPoint(float x1, float y1, float x2, float y2) {
    return new Point((x1 + x2) / 2, (y1 + y2) / 2);
-}
-
-// gets the angle of the line from horizontal, requires trig
-// x1, y1 is the first point and x2 y2 is the second but we can get a vector from them
-public float[] findCircle(float x1, float y1, float x2, float y2, float x3, float y3) {
-   float x12 = x1 - x2;
-   float x13 = x1 - x3;
-   
-   float y12 = y1 - y2;
-   float y13 = y1 - y3;
-   
-   float y31 = y3 - y1;
-   float y21 = y2 - y1;
-   
-   float x31 = x3 - x1;
-   float x21 = x2 - x1;
-   
-   // x1^2 - x3^2
-   float sx13 = (float)(pow(x1, 2) -
-   pow(x3, 2));
-   
-   // y1^2 - y3^2
-   float sy13 = (float)(pow(y1, 2) -
-   pow(y3, 2));
-   
-   float sx21 = (float)(pow(x2, 2) -
-   pow(x1, 2));
-   
-   float sy21 = (float)(pow(y2, 2) -
-   pow(y1, 2));
-   
-   float f = ((sx13) * (x12)
-   + (sy13) * (x12)
-   + (sx21) * (x13)
-   + (sy21) * (x13))
-   / (2 * ((y31) * (x12) - (y21) * (x13)));
-   float g = ((sx13) * (y12)
-   + (sy13) * (y12)
-   + (sx21) * (y13)
-   + (sy21) * (y13))
-   / (2 * ((x31) * (y12) - (x21) * (y13)));
-   
-   float c = -(float)pow(x1, 2) - (float)pow(y1, 2) -
-   2 * g * x1 - 2 * f * y1;
-   
-   // eqn of circle be x^2 + y^2 + 2*g*x + 2*f*y + c = 0
-   // where centre is (h = -g, k = -f) and radius r
-   // as r^2 = h^2 + k^2 - c
-   float centerX = -g;
-   float centerY = -f;
-   float sqr_of_r = centerX * centerX + centerY * centerY - c;
-   
-   // r is the radius
-   float r = sqrt(sqr_of_r);
-   return new float[] {centerX, centerY, r};
 }
 
 public void deleteEdge(int x, int y) {
@@ -291,29 +257,24 @@ public int getComponents() {
    }
   
    int components = 1;
-   println("b4 while");
-   println(adjacentVertices.toString());
 
    while (!unvisited.isEmpty()) {
-    println("father help");
     if (nextToVisit.isEmpty()) {
       components += 1;
       for (Vertex next : unvisited) {
-        nextToVisit.add(next.index);
+        nextToVisit.add(vertices.indexOf(next));
         break;
       }
     }
     Vertex curr = vertices.get(nextToVisit.pop());
     unvisited.remove(curr);
-
-    List<Vertex> connectedVertices = adjacentVertices.get(curr.index);
+    List<Vertex> connectedVertices = adjacentVertices.get(vertices.indexOf(curr));
     for (Vertex conn : connectedVertices) {
        if (unvisited.contains(conn)) {
-         nextToVisit.add(conn.index);
+         nextToVisit.add(vertices.indexOf(conn));
        }
     }
     
-
    }
 
    return components;
@@ -343,63 +304,54 @@ public int edgeWithVerticesCount(Vertex target1, Vertex target2) {
    return count;
 }
 
-public PShape getEdgeAngle(int x1, int y1, int x2, int y2, Edge curr) {
-   Point mid = getMidPoint(x1, y1, x2, y2);
+public PShape getEdgeAngle(Edge curr) {
    stroke(colors.WHITE());
    noFill();
-   boolean point1Below = (y1 - mid.y) > 0;
+   float centerX = curr.centerX;
+   float centerY = curr.centerY;
+   float r = curr.radius;
    
-   float x3dir = -(y2 - y1);
-   float y3dir = mid.x;
-   float magnitude = sqrt(x3dir * x3dir + y3dir * y3dir);
-   x3dir /= magnitude;
-   y3dir /= magnitude;
+   if (curr.isLoop()) {
+     return createShape(ARC, centerX, centerY, r * 2, r * 2, 0, TAU);
+   }
    
-   float midpointDist = distance(x1, y1, x2, y2) / 10;
-   x3dir *= midpointDist;
-   y3dir *= midpointDist;
-   
-   curr.setMidpoint(new Vertex((int)(mid.x + x3dir), (int)(mid.y + y3dir)));
-   float[] circle = findCircle(x1, y1, mid.x + x3dir, mid.y + y3dir, x2, y2);
-   
-   float centerX = circle[0];
-   float centerY = circle[1];
-   float r = circle[2];
-   
-   float adjX1 = x1 - centerX;
-   float adjY1 = y1 - centerY;
-   float adjX2 = x2 - centerX;
-   float adjY2 = y2 - centerY;
+   float adjX1 = curr.start.posX - centerX;
+   float adjY1 = curr.start.posY - centerY;
+   float adjX2 = curr.end.posX - centerX;
+   float adjY2 = curr.end.posY - centerY;
    
    Point point1 = new Point(adjX1, adjY1);
    Point point2 = new Point(adjX2, adjY2);
-   int point1Quad = point1.quadrant();
-   int point2Quad = point2.quadrant();
    
    float startAngle = angleFrom0(point1, r);
+   float midpointAngle = angleFrom0(new Point(curr.midpoint.posX - centerX, curr.midpoint.posY - centerY), r);
    float endAngle = angleFrom0(point2, r);
    
-   if (startAngle > endAngle) {
-      float temp = startAngle;
-      startAngle = endAngle;
-      endAngle = temp;
-   }
+   float relMid = (midpointAngle - startAngle + TAU) % TAU;
+   float relEnd = (endAngle - startAngle + TAU) % TAU;
    
-   return createShape(ARC, centerX, centerY, r * 2, r * 2, startAngle, endAngle);
+   if (relMid > relEnd) {
+      //float temp = startAngle;
+      //startAngle = (endAngle + TAU) % TAU;
+      //endAngle = (temp + TAU) % TAU;   
+      relEnd -= TAU;
+    }
+    
+    if ((startAngle + TAU) % TAU > (startAngle + relEnd + TAU) % TAU) {
+      return createShape(ARC, centerX, centerY, r * 2, r * 2, (startAngle + relEnd + TAU) % TAU, (startAngle + TAU) % TAU);
+    } else 
+      return createShape(ARC, centerX, centerY, r * 2, r * 2, (startAngle + TAU) % TAU, (startAngle + relEnd + TAU) % TAU);
 }
 
 public float angleFrom0(Point point, float r) {
-   switch (point.quadrant()) {
-      case 1:
-      return acos(point.x / r);
-      case 2:
-      return acos(point.x / r);
-      case 3:
-      float diff = PI - acos(point.x / r);
-      return 2 * diff + acos(point.x / r);
-      case 4:
-      return TAU - acos(point.x / r);
-      default:
-      return -375.0;
-   }
+   return atan2(point.y, point.x);
+}
+
+public Edge findEdgeMidpoint(int posX, int posY) {
+  for (Edge edge : edges) {
+     if (distance(posX, posY, edge.midpoint.posX, edge.midpoint.posY) < 15) {
+         return edge;
+     }
+  }
+  return null;
 }
