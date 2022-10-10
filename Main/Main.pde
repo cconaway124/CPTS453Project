@@ -9,6 +9,10 @@ myColor colors = new myColor();
 boolean vertexOn;
 boolean edgeOn;
 boolean deleteOn;
+boolean vertexLabelOn;
+boolean edgeLabelOn;
+boolean vertexDegreeOn;
+boolean totalDegreeOn;
 
 int currX, currY;
 
@@ -20,12 +24,16 @@ public int components = 0;
 
 public final static int NO_DRAW_Y_BOUND = 200;
 public final static int NO_DRAW_X_BOUND = 200;
-public final static int RADIUS = 25;
+public final static int RADIUS = 30;
 
 Button vertexBtn;
 Button edgeBtn;
 Button deleteBtn;
 Button emptyScreen;
+Button vertexLabelBtn;
+Button edgeLabelBtn;
+Button vertexDegreeBtn;
+Button totalDegreeBtn;
 
 void setup() {
    size(1500, 1500);
@@ -46,6 +54,10 @@ void setup() {
    edgeBtn = addButton("edge", 0, 160, 50, 100, 50, true);
    deleteBtn = addButton("delete", 0, 270, 50, 100, 50, true);
    emptyScreen = addButton("reset", 0, 380, 50, 100, 50, true);
+   vertexLabelBtn = addButton("vlabels", 0, 50, 110, 100, 50, true);
+   edgeLabelBtn = addButton("elabels", 0, 50, 170, 100, 50, true);
+   vertexDegreeBtn = addButton("vDegree", 0, 160, 110, 100, 50, true);
+   totalDegreeBtn = addButton("totalDegree", 0, 270, 110, 100, 50, true);
 }
 
 public void vertex(boolean isOn) {
@@ -88,6 +100,38 @@ public void reset(boolean isOn) {
    }
 }
 
+public void vlabels(boolean isOn) {
+  if (isOn) {
+   vertexLabelOn = true;
+  } else {
+    vertexLabelOn = false;
+  }
+}
+
+public void elabels(boolean isOn) {
+  if (isOn) {
+    edgeLabelOn = true;
+  } else {
+    edgeLabelOn = false;
+  }
+}
+
+public void vDegree(boolean isOn) {
+  if (isOn) {
+    vertexDegreeOn = true;
+  } else {
+    vertexDegreeOn = false;
+  }
+}
+
+public void totalDegree(boolean isOn) {
+  if (isOn) {
+    totalDegreeOn = true;
+  } else {
+    totalDegreeOn = false;
+  }
+}
+
 void draw() {
    background(colors.BLACK());
    push();
@@ -96,6 +140,11 @@ void draw() {
    line(NO_DRAW_X_BOUND, NO_DRAW_Y_BOUND, NO_DRAW_X_BOUND, height);
    textSize(48);
    text(String.format("n = %d, m = %d, k = %d", vertices.size(), edges.size(), components), 750, 100);
+   if (totalDegreeOn) {
+     text(String.format("n = %d, m = %d, k = %d, Total degree = %d", vertices.size(), edges.size(), components, edges.size() * 2), 750, 100);
+   } else {
+    text(String.format("n = %d, m = %d, k = %d", vertices.size(), edges.size(), components), 750, 100); 
+   }
    pop();
    
    push();
@@ -104,14 +153,38 @@ void draw() {
       shape(arc);
       fill(colors.WHITE());
       ellipse(curr.midpoint.posX, curr.midpoint.posY, 15, 15);
+      if (edgeLabelOn) {
+        textSize(32);
+        text(String.format("E%d", edges.indexOf(curr)), curr.midpoint.posX - RADIUS / 2, curr.midpoint.posY + RADIUS);
+      }
    }
    pop();
+   
+   push();
    for (int i = 0; i < vertices.size(); i++) {
-      PShape ellipse = createShape(ELLIPSE, vertices.get(i).posX, vertices.get(i).posY, RADIUS * 2, RADIUS * 2);
-      ellipse.setFill(colors.BLUE());
+      PShape ellipse = createShape(ELLIPSE, vertices.get(i).posX, vertices.get(i).posY - 10, RADIUS * 2, RADIUS * 2);
+      ellipse.setFill(colors.YELLOW());
       ellipse.setStroke(0);
       shape(ellipse);
+      if (vertexLabelOn) {
+        textSize(32);
+        text(String.format("V%d", i), vertices.get(i).posX - RADIUS / 2, vertices.get(i).posY);
+      }
+      
+      if (vertexDegreeOn) {
+        text(String.format("%d", getDegreeOfVertex(vertices.get(i))), vertices.get(i).posX - 50, vertices.get(i).posY - 50);
+      }
    }
+   pop();
+}
+
+public int getDegreeOfVertex(Vertex vert) {
+  int count = 0;
+  for (Edge edge : edges) {
+     if (edge.contains(vert))
+       count++;
+  }
+  return count;
 }
 
 public Button addButton(String name, int initValue, int posX, int posY, int len,
