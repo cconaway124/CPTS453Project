@@ -104,7 +104,6 @@ void draw() {
       shape(arc);
       fill(colors.WHITE());
       ellipse(curr.midpoint.posX, curr.midpoint.posY, 15, 15);
-      
    }
    pop();
    for (int i = 0; i < vertices.size(); i++) {
@@ -172,6 +171,11 @@ public void mouseDragged() {
      Vertex onVert = findVertex(mouseX, mouseY);
      if (onVert != null && mousePressed) {
          onVert.setPosition(mouseX, mouseY);
+         for (Edge edge : edges) {
+            if (edge.contains(onVert))
+              edge.updateCircle();
+              edge.setMidpoint();
+         }
      }
   }
   
@@ -330,10 +334,7 @@ public PShape getEdgeAngle(Edge curr) {
    float relMid = (midpointAngle - startAngle + TAU) % TAU;
    float relEnd = (endAngle - startAngle + TAU) % TAU;
    
-   if (relMid > relEnd) {
-      //float temp = startAngle;
-      //startAngle = (endAngle + TAU) % TAU;
-      //endAngle = (temp + TAU) % TAU;   
+   if (relMid > relEnd) {  
       relEnd -= TAU;
     }
     

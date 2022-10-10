@@ -38,16 +38,19 @@ public class Edge {
    this.midpoint = new Vertex((int)(mid.x + x3dir), (int)(mid.y + y3dir));
    if (noNull()) {
      if (!this.isLoop())
-      setCircle(start.posX, start.posY, midpoint.posX, midpoint.posY, end.posX, end.posY);
+      findCircle(start.posX, start.posY, midpoint.posX, midpoint.posY, end.posX, end.posY);
      else
-       setCircle(start.posX, start.posY, midpoint.posX, midpoint.posY, end.posX, end.posY);
+       findCircle(start.posX + 100, start.posY, midpoint.posX, midpoint.posY, end.posX, end.posY);
    }
   }
   
 public void setMidpoint(int x, int y) {   
    this.midpoint = new Vertex((int)(x), (int)(y));
    if (noNull()) {
-      setCircle(start.posX + 100, start.posY, midpoint.posX, midpoint.posY, end.posX, end.posY);
+      if (!this.isLoop())
+      findCircle(start.posX, start.posY, midpoint.posX, midpoint.posY, end.posX, end.posY);
+     else
+       findCircle(start.posX + 100, start.posY, midpoint.posX, midpoint.posY, end.posX, end.posY);
    }
   }
   
@@ -77,7 +80,7 @@ public void setMidpoint(int x, int y) {
   
   // gets the angle of the line from horizontal, requires trig
 // x1, y1 is the first point and x2 y2 is the second but we can get a vector from them
-public void setCircle(float x1, float y1, float x2, float y2, float x3, float y3) {
+public void findCircle(float x1, float y1, float x2, float y2, float x3, float y3) {
    float x12 = x1 - x2;
    float x13 = x1 - x3;
    
@@ -131,5 +134,14 @@ public void setCircle(float x1, float y1, float x2, float y2, float x3, float y3
   
   public boolean isLoop() {
      return start.equals(end); 
+  }
+  
+  public void updateCircle() {
+    if (noNull()) {
+      if (!this.isLoop())
+      findCircle(start.posX, start.posY, midpoint.posX, midpoint.posY, end.posX, end.posY);
+     else
+       findCircle(start.posX + 100, start.posY, midpoint.posX, midpoint.posY, end.posX, end.posY);
+   }
   }
 }
