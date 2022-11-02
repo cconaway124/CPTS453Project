@@ -60,9 +60,9 @@ void setup() {
    vertexDegreeBtn = addButton("vDegree", 0, 160, 110, 100, 50, true);
    totalDegreeBtn = addButton("totalDegree", 0, 270, 110, 100, 50, true);
    
-   r = cp5.addSlider("r").setPosition(20,300).setRange(0,255).setWidth(20).setHeight(255);
-   g = cp5.addSlider("g").setPosition(80,300).setRange(0,255).setWidth(20).setHeight(255);
-   b = cp5.addSlider("b").setPosition(140,300).setRange(0,255).setWidth(20).setHeight(255);
+   r = cp5.addSlider("r").setPosition(20,300).setRange(0,255).setWidth(20).setHeight(255).setValue(255);
+   g = cp5.addSlider("g").setPosition(80,300).setRange(0,255).setWidth(20).setHeight(255).setValue(255);
+   b = cp5.addSlider("b").setPosition(140,300).setRange(0,255).setWidth(20).setHeight(255).setValue(255);
 }
 
 public void vertex(boolean isOn) {
@@ -167,8 +167,9 @@ void draw() {
    push();
    for (Edge curr : edges) {
       PShape arc = getEdgeAngle(curr);
-      shape(arc);
+      arc.setStroke(curr.edgeColor);
       fill(curr.edgeColor);
+      shape(arc);
       ellipse(curr.midpoint.posX, curr.midpoint.posY, 15, 15);
       if (edgeLabelOn) {
         textSize(32);
@@ -181,7 +182,7 @@ void draw() {
    for (Vertex vert : vertices) {
       PShape ellipse = createShape(ELLIPSE, vert.posX, vert.posY - 10, RADIUS * 2, RADIUS * 2);
       ellipse.setFill(vert.vertColor);
-      ellipse.setStroke(0);
+      ellipse.setStroke(vert.vertColor);
       shape(ellipse);
       if (vertexLabelOn) {
         push();
@@ -219,10 +220,11 @@ public void mousePressed() {
       if (vertexOn) {
          Vertex onVert = findVertex(mouseX, mouseY);
          if (onVert != null) {
-             onVert.setPosition(mouseX, mouseY);
-             onVert.setColor(currColor);
+           onVert.setPosition(mouseX, mouseY);
+           onVert.setColor(currColor);
          } else {
            Vertex vert = new Vertex(mouseX, mouseY);
+           vert.setColor(currColor);
            vertices.add(vert);
          }
       }
@@ -239,9 +241,14 @@ public void mousePressed() {
              } else {
                loop = new Edge(currEdge.get(0), currEdge.get(1));
              }
+             loop.setColor(currColor);
              edges.add(loop);  
              currEdge = new ArrayList<Vertex>();
             }
+         }
+         Edge currEdge = findEdge(mouseX, mouseY);
+         if (currEdge != null) {
+          currEdge.setColor(currColor); 
          }
       } else {
          currEdge = new ArrayList<Vertex>();
@@ -328,6 +335,16 @@ public void deleteEdge(int x, int y) {
          break;
       }
    }
+}
+
+public Edge findEdge(int x, int y) {
+   for (int i = 0; i < edges.size(); i++) {
+      Edge curr = edges.get(i);
+      if (abs(curr.radius - distance(x, y, curr.centerX, curr.centerY)) < 25) {
+         return curr;
+      }
+   }
+   return null;
 }
 
 public int getComponents() {
