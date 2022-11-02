@@ -51,4 +51,8 @@ public class myColor {
   public color BROWN() {
       return color(130, 86, 4);
   }
+  
+  public color complementaryColor(color givenColor) {
+      return color(255 - red(givenColor), 255 - green(givenColor), 255 - blue(givenColor));
+  }
 }

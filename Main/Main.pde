@@ -14,11 +14,11 @@ boolean edgeLabelOn;
 boolean vertexDegreeOn;
 boolean totalDegreeOn;
 
-int currX, currY;
-
 ArrayList<Vertex> vertices = new ArrayList<Vertex>();
 ArrayList<Edge> edges = new ArrayList<Edge>();
 ArrayList<Vertex> currEdge = new ArrayList<Vertex>();
+
+public color currColor;
 
 public int components = 0;
 
@@ -35,6 +35,10 @@ Button edgeLabelBtn;
 Button vertexDegreeBtn;
 Button totalDegreeBtn;
 
+Slider r;
+Slider g;
+Slider b;
+
 void setup() {
    size(1500, 1500);
    surface.setResizable(true);
@@ -46,9 +50,6 @@ void setup() {
    edgeOn = false;
    deleteOn = false;
    
-   currX = mouseX;
-   currY = mouseY;
-   
    // create a new button with name 'buttonA'
    vertexBtn = addButton("vertex", 0, 50, 50, 100, 50, true);
    edgeBtn = addButton("edge", 0, 160, 50, 100, 50, true);
@@ -58,6 +59,10 @@ void setup() {
    edgeLabelBtn = addButton("elabels", 0, 50, 170, 100, 50, true);
    vertexDegreeBtn = addButton("vDegree", 0, 160, 110, 100, 50, true);
    totalDegreeBtn = addButton("totalDegree", 0, 270, 110, 100, 50, true);
+   
+   r = cp5.addSlider("r").setPosition(20,300).setRange(0,255).setWidth(20).setHeight(255);
+   g = cp5.addSlider("g").setPosition(80,300).setRange(0,255).setWidth(20).setHeight(255);
+   b = cp5.addSlider("b").setPosition(140,300).setRange(0,255).setWidth(20).setHeight(255);
 }
 
 public void vertex(boolean isOn) {
@@ -132,6 +137,18 @@ public void totalDegree(boolean isOn) {
   }
 }
 
+public void r(float r) {
+  currColor = color(r, green(currColor), blue(currColor));
+}
+
+public void g(float g) {
+  currColor = color(red(currColor), g, blue(currColor));
+}
+
+public void b(float b) {
+  currColor = color(red(currColor), green(currColor), b);
+}
+
 void draw() {
    background(colors.BLACK());
    push();
@@ -151,7 +168,7 @@ void draw() {
    for (Edge curr : edges) {
       PShape arc = getEdgeAngle(curr);
       shape(arc);
-      fill(colors.WHITE());
+      fill(curr.edgeColor);
       ellipse(curr.midpoint.posX, curr.midpoint.posY, 15, 15);
       if (edgeLabelOn) {
         textSize(32);
@@ -161,18 +178,21 @@ void draw() {
    pop();
    
    push();
-   for (int i = 0; i < vertices.size(); i++) {
-      PShape ellipse = createShape(ELLIPSE, vertices.get(i).posX, vertices.get(i).posY - 10, RADIUS * 2, RADIUS * 2);
-      ellipse.setFill(colors.YELLOW());
+   for (Vertex vert : vertices) {
+      PShape ellipse = createShape(ELLIPSE, vert.posX, vert.posY - 10, RADIUS * 2, RADIUS * 2);
+      ellipse.setFill(vert.vertColor);
       ellipse.setStroke(0);
       shape(ellipse);
       if (vertexLabelOn) {
+        push();
+        fill(colors.complementaryColor(vert.vertColor));
         textSize(32);
-        text(String.format("V%d", i), vertices.get(i).posX - RADIUS / 2, vertices.get(i).posY);
+        text(String.format("V%d", vertices.indexOf(vert)), vert.posX - RADIUS / 2, vert.posY);
+        pop();
       }
       
       if (vertexDegreeOn) {
-        text(String.format("%d", getDegreeOfVertex(vertices.get(i))), vertices.get(i).posX - 50, vertices.get(i).posY - 50);
+        text(String.format("%d", getDegreeOfVertex(vert)), vert.posX - 50, vert.posY - 50);
       }
    }
    pop();
@@ -198,8 +218,9 @@ public void mousePressed() {
    if (mouseY >= NO_DRAW_Y_BOUND && mouseX >= NO_DRAW_X_BOUND) {
       if (vertexOn) {
          Vertex onVert = findVertex(mouseX, mouseY);
-         if (onVert != null && mousePressed) {
+         if (onVert != null) {
              onVert.setPosition(mouseX, mouseY);
+             onVert.setColor(currColor);
          } else {
            Vertex vert = new Vertex(mouseX, mouseY);
            vertices.add(vert);

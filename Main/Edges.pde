@@ -6,7 +6,7 @@ public class Edge {
   public float centerX;
   public float centerY;
   public float radius;
-  
+  public color edgeColor = colors.WHITE();;
   
   public Edge() {}
   
@@ -14,6 +14,10 @@ public class Edge {
      this.start = start;
      this.end = end;
      setMidpoint();
+  }
+  
+  public void setColor(color edgeColor) {
+    this.edgeColor = edgeColor;
   }
 
   public void setStartPoint(Vertex start) {
