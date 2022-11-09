@@ -151,7 +151,6 @@ public void b(float b) {
 
 void draw() {
    background(colors.BLACK());
-   arc(400, 400, 100, 100, -1, 1);
    push();
    stroke(colors.WHITE());
    line(NO_DRAW_X_BOUND, NO_DRAW_Y_BOUND, width, NO_DRAW_Y_BOUND);
@@ -444,12 +443,13 @@ public PShape getEdgeAngle(Edge curr) {
    float relEnd = (endAngle - startAngle + TAU) % TAU;
    
    if (relMid < relEnd) {  
-     println("true");
      return createShape(ARC, centerX, centerY, r * 2, r * 2, (startAngle), (startAngle + relEnd));
     }
     else {
-      println("False");
-      return createShape(ARC, centerX, centerY, r * 2, r * 2, (endAngle), (startAngle));
+      while (abs(((-(2 * TAU - endAngle)) % TAU) - startAngle) > TAU) {
+       endAngle += TAU; 
+      }
+      return createShape(ARC, centerX, centerY, r * 2, r * 2, (-(2 * TAU - endAngle)) % TAU, (startAngle));
     }
     
     
