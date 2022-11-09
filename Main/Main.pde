@@ -151,6 +151,7 @@ public void b(float b) {
 
 void draw() {
    background(colors.BLACK());
+   arc(400, 400, 100, 100, -1, 1);
    push();
    stroke(colors.WHITE());
    line(NO_DRAW_X_BOUND, NO_DRAW_Y_BOUND, width, NO_DRAW_Y_BOUND);
@@ -435,28 +436,28 @@ public PShape getEdgeAngle(Edge curr) {
    float adjX2 = curr.end.posX - centerX;
    float adjY2 = curr.end.posY - centerY;
    
-   Point point1 = new Point(adjX1, adjY1);
-   Point point2 = new Point(adjX2, adjY2);
-   
-   float startAngle = angleFrom0(point1, r);
-   float midpointAngle = angleFrom0(new Point(curr.midpoint.posX - centerX, curr.midpoint.posY - centerY), r);
-   float endAngle = angleFrom0(point2, r);
+   float startAngle = angleFrom0(adjX1, adjY1);
+   float midpointAngle = angleFrom0(curr.midpoint.posX - centerX, curr.midpoint.posY - centerY);
+   float endAngle = angleFrom0(adjX2, adjY2);
    
    float relMid = (midpointAngle - startAngle + TAU) % TAU;
    float relEnd = (endAngle - startAngle + TAU) % TAU;
    
-   if (relMid > relEnd) {  
-      relEnd -= TAU;
+   if (relMid < relEnd) {  
+     println("true");
+     return createShape(ARC, centerX, centerY, r * 2, r * 2, (startAngle), (startAngle + relEnd));
+    }
+    else {
+      println("False");
+      return createShape(ARC, centerX, centerY, r * 2, r * 2, (endAngle), (startAngle));
     }
     
-    if ((startAngle + TAU) % TAU > (startAngle + relEnd + TAU) % TAU) {
-      return createShape(ARC, centerX, centerY, r * 2, r * 2, (startAngle + relEnd + TAU) % TAU, (startAngle + TAU) % TAU);
-    } else 
-      return createShape(ARC, centerX, centerY, r * 2, r * 2, (startAngle + TAU) % TAU, (startAngle + relEnd + TAU) % TAU);
+    
+
 }
 
-public float angleFrom0(Point point, float r) {
-   return atan2(point.y, point.x);
+public float angleFrom0(float x, float y) {
+   return atan2(y, x);
 }
 
 public Edge findEdgeMidpoint(int posX, int posY) {
