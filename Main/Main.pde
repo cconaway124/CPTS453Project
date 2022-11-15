@@ -13,6 +13,7 @@ boolean vertexLabelOn;
 boolean edgeLabelOn;
 boolean vertexDegreeOn;
 boolean totalDegreeOn;
+boolean directedOn;
 
 ArrayList<Vertex> vertices = new ArrayList<Vertex>();
 ArrayList<Edge> edges = new ArrayList<Edge>();
@@ -34,6 +35,7 @@ Button vertexLabelBtn;
 Button edgeLabelBtn;
 Button vertexDegreeBtn;
 Button totalDegreeBtn;
+Button directedBtn;
 
 Slider r;
 Slider g;
@@ -59,6 +61,7 @@ void setup() {
    edgeLabelBtn = addButton("elabels", 0, 50, 170, 100, 50, true);
    vertexDegreeBtn = addButton("vDegree", 0, 160, 110, 100, 50, true);
    totalDegreeBtn = addButton("totalDegree", 0, 270, 110, 100, 50, true);
+   directedBtn = addButton("directed", 0, 270, 110, 100, 50, true);
    
    r = cp5.addSlider("r").setPosition(20,300).setRange(0,255).setWidth(20).setHeight(255).setValue(255);
    g = cp5.addSlider("g").setPosition(80,300).setRange(0,255).setWidth(20).setHeight(255).setValue(255);
@@ -137,6 +140,14 @@ public void totalDegree(boolean isOn) {
   }
 }
 
+public void directed(boolean isOn) {
+  if (isOn) {
+    directedOn = true;
+  } else {
+    directedOn = false;
+  }
+}
+
 public void r(float r) {
   currColor = color(r, green(currColor), blue(currColor));
 }
@@ -151,8 +162,9 @@ public void b(float b) {
 
 void draw() {
    background(colors.BLACK());
+   //shape(arrowHead(new PVector(400, 400), new PVector(500, 400)), 400, 400);
    push();
-   stroke(colors.WHITE());
+   stroke(colors.WHITE());   
    line(NO_DRAW_X_BOUND, NO_DRAW_Y_BOUND, width, NO_DRAW_Y_BOUND);
    line(NO_DRAW_X_BOUND, NO_DRAW_Y_BOUND, NO_DRAW_X_BOUND, height);
    textSize(48);
@@ -170,7 +182,19 @@ void draw() {
       arc.setStroke(curr.edgeColor);
       fill(curr.edgeColor);
       shape(arc);
-      ellipse(curr.midpoint.posX, curr.midpoint.posY, 15, 15);
+      if (directedOn) {
+        float midpointX = curr.midpoint.posX;
+        float midpointY = curr.midpoint.posY;
+        PVector parallelVect = PVector.mult(new PVector(curr.end.posX - curr.start.posX, curr.end.posY - curr.start.posY).normalize(), 10);
+        PVector midpointVect = new PVector(midpointX, midpointY);
+        PVector vectSub = new PVector(midpointVect.x - parallelVect.x, midpointVect.y - parallelVect.y);
+        PVector vectAdd = new PVector(midpointVect.x + parallelVect.x, midpointVect.y + parallelVect.y);
+        println(midpointVect.x - parallelVect.x, midpointVect.x + parallelVect.x, parallelVect.x, midpointVect.x);
+        PShape arrow = arrowHead(vectSub, vectAdd);
+        arrow.fill(curr.edgeColor);
+        shape(arrow, midpointX, midpointY);
+      } else 
+        ellipse(curr.midpoint.posX, curr.midpoint.posY, 10, 10);
       if (edgeLabelOn) {
         textSize(32);
         text(String.format("E%d", edges.indexOf(curr)), curr.midpoint.posX - RADIUS / 2, curr.midpoint.posY + RADIUS);
@@ -467,4 +491,40 @@ public Edge findEdgeMidpoint(int posX, int posY) {
      }
   }
   return null;
+}
+
+//The first point is the "back" of the arrow, and the second point is the "front"
+public PShape arrowHead(PVector vect1, PVector vect2) {
+  PVector middleArrow = vect2.sub(vect1);;
+  
+  float angleBetween = middleArrow.heading();
+  println("zero: " + angleBetween);  
+  
+  PVector wing1 = PVector.mult(PVector.fromAngle(angleBetween + radians(150)), 20);
+  PVector wing2 = PVector.mult(PVector.fromAngle(angleBetween + radians(210)), 20);
+  
+  //wing1 = wing1.add(vect1);
+  //wing2 = wing2.add(vect1);
+  /*
+     line(400, 400, 500, 400);
+   line(400, 400, 350, 350);
+   line(350, 350, 500, 400);
+   line(400, 400, 350, 450);
+   line(350, 450, 500, 400);
+  */
+  
+  PShape arrow = createShape();
+  arrow.beginShape();
+  
+  arrow.noStroke();
+  
+  arrow.vertex(wing1.x, wing1.y);
+  arrow.vertex(vect2.x, vect2.y);
+  arrow.vertex(wing2.x, wing2.y);
+  arrow.vertex(0, 0);
+  arrow.vertex(wing1.x, wing1.y);  
+  
+  arrow.endShape(CLOSE);
+  
+  return arrow; 
 }
