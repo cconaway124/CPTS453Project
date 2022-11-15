@@ -14,6 +14,9 @@ boolean edgeLabelOn;
 boolean vertexDegreeOn;
 boolean totalDegreeOn;
 boolean directedOn;
+boolean bridgeOn;
+
+int bridgeExecution = 0;
 
 ArrayList<Vertex> vertices = new ArrayList<Vertex>();
 ArrayList<Edge> edges = new ArrayList<Edge>();
@@ -36,6 +39,7 @@ Button edgeLabelBtn;
 Button vertexDegreeBtn;
 Button totalDegreeBtn;
 Button directedBtn;
+Button bridges;
 
 Slider r;
 Slider g;
@@ -62,6 +66,7 @@ void setup() {
    vertexDegreeBtn = addButton("vDegree", 0, 160, 110, 100, 50, true);
    totalDegreeBtn = addButton("totalDegree", 0, 270, 110, 100, 50, true);
    directedBtn = addButton("directed", 0, 270, 110, 100, 50, true);
+   bridges = addButton("bridges", 0, 160, 170, 100, 50, true);
    
    r = cp5.addSlider("r").setPosition(20,300).setRange(0,255).setWidth(20).setHeight(255).setValue(255);
    g = cp5.addSlider("g").setPosition(80,300).setRange(0,255).setWidth(20).setHeight(255).setValue(255);
@@ -104,7 +109,7 @@ public void reset(boolean isOn) {
       vertexBtn.setOff();
       edgeBtn.setOff();
       deleteBtn.setOff();
-      components = getComponents();
+      components = getComponents(vertices, edges);
    }
 }
 
@@ -148,6 +153,15 @@ public void directed(boolean isOn) {
   }
 }
 
+public void bridges(boolean isOn) {
+  if (isOn) {
+    bridgeOn = true;
+  } else {
+    bridgeOn = false;
+    bridgeExecution = 0;
+  }
+}
+
 public void r(float r) {
   currColor = color(r, green(currColor), blue(currColor));
 }
@@ -176,6 +190,21 @@ void draw() {
    }
    pop();
    
+   // execute if bridge is on
+   if (bridgeOn && bridgeExecution <= 4) {
+    ArrayList<Edge> currBridges = getBridges();
+    for (Edge edge : currBridges) {
+        if (bridgeExecution % 2 == 0) {
+          println("0");
+          edge.setColor(colors.complementaryColor(currColor));
+        } else
+          edge.setColor(currColor);
+      }
+      int start = millis();
+      while (millis() - start <= 100){}
+      bridgeExecution++;
+   }
+   
    push();
    for (Edge curr : edges) {
       PShape arc = getEdgeAngle(curr);
@@ -189,7 +218,6 @@ void draw() {
         PVector midpointVect = new PVector(midpointX, midpointY);
         PVector vectSub = new PVector(midpointVect.x - parallelVect.x, midpointVect.y - parallelVect.y);
         PVector vectAdd = new PVector(midpointVect.x + parallelVect.x, midpointVect.y + parallelVect.y);
-        println(midpointVect.x - parallelVect.x, midpointVect.x + parallelVect.x, parallelVect.x, midpointVect.x);
         PShape arrow = arrowHead(vectSub, vectAdd);
         arrow.fill(curr.edgeColor);
         shape(arrow, midpointX, midpointY);
@@ -287,7 +315,7 @@ public void mousePressed() {
          
          deleteEdge(mouseX, mouseY);
       }
-      components = getComponents();
+      components = getComponents(vertices, edges);
    }
 }
 
@@ -371,7 +399,7 @@ public Edge findEdge(int x, int y) {
    return null;
 }
 
-public int getComponents() {
+public int getComponents(ArrayList<Vertex> vertices, ArrayList<Edge> edges) {
   if (vertices.isEmpty())
     return 0;
     
@@ -498,20 +526,9 @@ public PShape arrowHead(PVector vect1, PVector vect2) {
   PVector middleArrow = vect2.sub(vect1);;
   
   float angleBetween = middleArrow.heading();
-  println("zero: " + angleBetween);  
   
   PVector wing1 = PVector.mult(PVector.fromAngle(angleBetween + radians(150)), 20);
   PVector wing2 = PVector.mult(PVector.fromAngle(angleBetween + radians(210)), 20);
-  
-  //wing1 = wing1.add(vect1);
-  //wing2 = wing2.add(vect1);
-  /*
-     line(400, 400, 500, 400);
-   line(400, 400, 350, 350);
-   line(350, 350, 500, 400);
-   line(400, 400, 350, 450);
-   line(350, 450, 500, 400);
-  */
   
   PShape arrow = createShape();
   arrow.beginShape();
@@ -527,4 +544,22 @@ public PShape arrowHead(PVector vect1, PVector vect2) {
   arrow.endShape(CLOSE);
   
   return arrow; 
+}
+
+public ArrayList<Edge> getBridges() {
+  ArrayList<Edge> bridges = new ArrayList<>();
+  int currentComponents = getComponents(vertices, edges);
+  for (Edge edge : edges) {
+    ArrayList<Edge> tempEdgeSet = new ArrayList<>(edges);
+    tempEdgeSet.remove(edge);
+    int changedComponents = getComponents(vertices, tempEdgeSet);
+    
+    if (changedComponents - currentComponents == 1) {
+      bridges.add(edge);
+    } else if (changedComponents - currentComponents == -1) {
+     println("ruh roh raggy"); 
+    }
+  }
+  
+  return bridges; 
 }
