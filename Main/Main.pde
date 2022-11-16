@@ -45,6 +45,8 @@ Slider r;
 Slider g;
 Slider b;
 
+Textfield number;
+
 void setup() {
    size(1500, 1500);
    surface.setResizable(true);
@@ -57,16 +59,16 @@ void setup() {
    deleteOn = false;
    
    // create a new button with name 'buttonA'
-   vertexBtn = addButton("vertex", 0, 50, 50, 100, 50, true);
-   edgeBtn = addButton("edge", 0, 160, 50, 100, 50, true);
-   deleteBtn = addButton("delete", 0, 270, 50, 100, 50, true);
-   emptyScreen = addButton("reset", 0, 380, 50, 100, 50, true);
-   vertexLabelBtn = addButton("vlabels", 0, 50, 110, 100, 50, true);
-   edgeLabelBtn = addButton("elabels", 0, 50, 170, 100, 50, true);
-   vertexDegreeBtn = addButton("vDegree", 0, 160, 110, 100, 50, true);
-   totalDegreeBtn = addButton("totalDegree", 0, 270, 110, 100, 50, true);
-   directedBtn = addButton("directed", 0, 270, 110, 100, 50, true);
-   bridges = addButton("bridges", 0, 160, 170, 100, 50, true);
+   vertexBtn = addButton("vertex", 0, 50, 40, 100, 50, true);
+   edgeBtn = addButton("edge", 0, 160, 40, 100, 50, true);
+   deleteBtn = addButton("delete", 0, 270, 40, 100, 50, true);
+   emptyScreen = addButton("reset", 0, 380, 40, 100, 50, true);
+   vertexLabelBtn = addButton("vlabels", 0, 50, 100, 100, 50, true);
+   edgeLabelBtn = addButton("elabels", 0, 50, 160, 100, 50, true);
+   vertexDegreeBtn = addButton("vDegree", 0, 160, 100, 100, 50, true);
+   totalDegreeBtn = addButton("totalDegree", 0, 270, 100, 100, 50, true);
+   directedBtn = addButton("directed", 0, 270, 100, 100, 50, true);
+   bridges = addButton("bridges", 0, 380, 100, 100, 50, true);
    
    r = cp5.addSlider("r").setPosition(20,300).setRange(0,255).setWidth(20).setHeight(255).setValue(255);
    g = cp5.addSlider("g").setPosition(80,300).setRange(0,255).setWidth(20).setHeight(255).setValue(255);
@@ -320,31 +322,34 @@ public void mousePressed() {
 }
 
 public void mouseDragged() {
-  if (vertexOn) {
-     Vertex onVert = findVertex(mouseX, mouseY);
-     if (onVert != null && mousePressed) {
-         onVert.setPosition(mouseX, mouseY);
-         for (Edge edge : edges) {
-            if (edge.contains(onVert))
-              edge.updateCircle();
-              edge.setMidpoint();
-         }
-     }
-  }
+  if (mouseY >= NO_DRAW_Y_BOUND && mouseX >= NO_DRAW_X_BOUND) {
+    if (vertexOn) {
+       Vertex onVert = findVertex(mouseX, mouseY);
+       if (onVert != null && mousePressed) {
+           onVert.setPosition(mouseX, mouseY);
+           for (Edge edge : edges) {
+              if (edge.contains(onVert))
+                edge.updateCircle();
+                edge.setMidpoint();
+           }
+       }
+    }
   
-  if (edgeOn) {
-    Edge onEdge = findEdgeMidpoint(mouseX, mouseY);
-    if (onEdge != null) {
-      if (!onEdge.isLoop()) {
-        Point mid = getMidPoint(onEdge.start.posX, onEdge.start.posY, onEdge.end.posX, onEdge.end.posY);
-        float radius = distance(onEdge.start.posX, onEdge.start.posY, onEdge.end.posX, onEdge.end.posY) / 2;
-        boolean betweenPoints = (abs(mid.x - mouseX) < radius) && (abs(mid.y - mouseY) < radius);
-        if (betweenPoints)
-         onEdge.setMidpoint(mouseX, mouseY); 
-      } else {
-         boolean withinR = distance(onEdge.start.posX, onEdge.start.posY, mouseX, mouseY) < 200;
-         if (withinR)
+  
+    if (edgeOn) {
+      Edge onEdge = findEdgeMidpoint(mouseX, mouseY);
+      if (onEdge != null) {
+        if (!onEdge.isLoop()) {
+          Point mid = getMidPoint(onEdge.start.posX, onEdge.start.posY, onEdge.end.posX, onEdge.end.posY);
+          float radius = distance(onEdge.start.posX, onEdge.start.posY, onEdge.end.posX, onEdge.end.posY) / 2;
+          boolean betweenPoints = (abs(mid.x - mouseX) < radius) && (abs(mid.y - mouseY) < radius);
+          if (betweenPoints)
            onEdge.setMidpoint(mouseX, mouseY); 
+        } else {
+           boolean withinR = distance(onEdge.start.posX, onEdge.start.posY, mouseX, mouseY) < 200;
+           if (withinR)
+             onEdge.setMidpoint(mouseX, mouseY); 
+        }
       }
     }
   }
@@ -562,4 +567,8 @@ public ArrayList<Edge> getBridges() {
   }
   
   return bridges; 
+}
+
+public void makeP_n(int n) {
+  
 }
