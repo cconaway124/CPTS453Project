@@ -15,8 +15,13 @@ boolean vertexDegreeOn;
 boolean totalDegreeOn;
 boolean directedOn;
 boolean bridgeOn;
+boolean graphPressed;
+boolean submitPressed;
+boolean badInt = false;
 
 int bridgeExecution = 0;
+int graphNum = -1;
+int hasBeenPressed = 0;
 
 ArrayList<Vertex> vertices = new ArrayList<Vertex>();
 ArrayList<Edge> edges = new ArrayList<Edge>();
@@ -30,6 +35,7 @@ public final static int NO_DRAW_Y_BOUND = 200;
 public final static int NO_DRAW_X_BOUND = 200;
 public final static int RADIUS = 30;
 
+// functionality buttons
 Button vertexBtn;
 Button edgeBtn;
 Button deleteBtn;
@@ -40,12 +46,17 @@ Button vertexDegreeBtn;
 Button totalDegreeBtn;
 Button directedBtn;
 Button bridges;
+Button importCommonGraphBtn;
+Button submitGraphBtn;
 
 Slider r;
 Slider g;
 Slider b;
 
-Textfield number;
+Textfield n_input;
+int nInputValue = -1;
+
+DropdownList commonGraphs;
 
 void setup() {
    size(1500, 1500);
@@ -69,10 +80,22 @@ void setup() {
    totalDegreeBtn = addButton("totalDegree", 0, 270, 100, 100, 50, true);
    directedBtn = addButton("directed", 0, 270, 100, 100, 50, true);
    bridges = addButton("bridges", 0, 380, 100, 100, 50, true);
+   importCommonGraphBtn = addButton("graph", 0, 490, 40, 100, 50, false).setOff();
+   submitGraphBtn = addButton("submit", 0, 550, 525, 100, 50, false).setOff().hide();
    
    r = cp5.addSlider("r").setPosition(20,300).setRange(0,255).setWidth(20).setHeight(255).setValue(255);
    g = cp5.addSlider("g").setPosition(80,300).setRange(0,255).setWidth(20).setHeight(255).setValue(255);
    b = cp5.addSlider("b").setPosition(140,300).setRange(0,255).setWidth(20).setHeight(255).setValue(255);
+   
+   n_input = cp5.addTextfield("input").setPosition(580, 450).setSize(200, 40).setFocus(true).setFont(createFont("arial",20)).setColor(colors.GRAY()).hide(); 
+   
+   commonGraphs = cp5.addDropdownList("Common Graphs", 420, 450, 150, 400).setBackgroundColor(colors.WHITE()).setItemHeight(25).setBarHeight(20).setBarVisible(false).close();
+   commonGraphs.addItem("P_n", 0);
+   commonGraphs.addItem("C_n", 1);
+   commonGraphs.addItem("K_n", 2);
+   commonGraphs.addItem("K_(p,q)", 3);
+   commonGraphs.addItem("Q_n", 4);
+   
 }
 
 public void vertex(boolean isOn) {
@@ -164,6 +187,42 @@ public void bridges(boolean isOn) {
   }
 }
 
+public void graph() {
+  if (commonGraphs != null) {   
+   graphPressed = true;
+  }
+}
+
+public void submit() {
+  if (commonGraphs != null) {   
+   submitPressed = true;
+   switch (graphNum) {
+      case 0:
+        makeP_n(nInputValue);
+        break;
+      case 1:
+        break;
+      case 2:
+        break;
+      case 3:
+        break;
+      case 4:
+        break;
+      default:
+        println("Something went wrong lmao - from switch in submit");
+        break;
+   }
+  }
+}
+
+public void input(String text) {
+  try {
+    nInputValue = Integer.parseInt(text);
+  } catch (NumberFormatException e) { 
+    badInt = true;
+  }
+}
+
 public void r(float r) {
   currColor = color(r, green(currColor), blue(currColor));
 }
@@ -178,7 +237,11 @@ public void b(float b) {
 
 void draw() {
    background(colors.BLACK());
-   //shape(arrowHead(new PVector(400, 400), new PVector(500, 400)), 400, 400);
+   push();
+   fill(currColor);
+   rect(50, 575, 75, 75);
+   pop();
+   
    push();
    stroke(colors.WHITE());   
    line(NO_DRAW_X_BOUND, NO_DRAW_Y_BOUND, width, NO_DRAW_Y_BOUND);
@@ -251,6 +314,34 @@ void draw() {
       }
    }
    pop();
+   
+   if (graphPressed && !submitPressed) {
+     rect(400, 400, 400, 220);
+    if(badInt) {
+       push();
+       textSize(20);
+       fill(colors.BLACK());
+       text("Not an int", 700, 510);
+       pop();
+     }
+     
+     push();
+     fill(colors.BLACK());
+     textSize(20);
+     text("Choose your graph:", 420, 430);
+     pop();
+    
+     submitGraphBtn.show();
+     commonGraphs.setBarVisible(true);
+     n_input.show();
+   } else if (graphPressed && submitPressed) {
+     submitGraphBtn.hide();
+     commonGraphs.setBarVisible(false);
+     n_input.hide();
+     graphPressed = false;
+     submitPressed = false;
+     badInt = false;
+   }
 }
 
 public int getDegreeOfVertex(Vertex vert) {
@@ -563,6 +654,8 @@ public ArrayList<Edge> getBridges() {
       bridges.add(edge);
     } else if (changedComponents - currentComponents == -1) {
      println("ruh roh raggy"); 
+    } else {
+      println("Ectra ruh roh raggy");
     }
   }
   
@@ -570,5 +663,29 @@ public ArrayList<Edge> getBridges() {
 }
 
 public void makeP_n(int n) {
-  
+  Vertex last_vertex = new Vertex();
+  for (int i = 0; i < n; i++) {
+    Vertex curr = new Vertex(250 + i * 150, 300);
+    vertices.add(curr);
+    if (last_vertex.posX != null) {
+      edges.add(new Edge(last_vertex, curr));
+    }
+    last_vertex = curr;
+  }
 }
+
+void controlEvent(ControlEvent theEvent) {
+  // if the event is from a group, which is the case with the dropdownlist
+  //println(theEvent.getGroup());
+  if (theEvent.isGroup()) {
+    // if the name of the event is equal to ImageSelect (aka the name of our dropdownlist)
+  } else if(theEvent.isController()) {
+    // not used in this sketch, but has to be included
+    if (theEvent.getController().getName().equals("Common Graphs")) {
+      // then do stuff, in this case: set the variable selectedImage to the value associated
+      // with the item from the dropdownlist (which in this case is either 0 or 1)
+      graphNum = int(theEvent.getController().getValue());
+        
+      }
+    }
+  }
