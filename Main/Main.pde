@@ -55,6 +55,8 @@ Slider b;
 
 Textfield n_input;
 int nInputValue = -1;
+int p = -1;
+int q = -1;
 
 DropdownList commonGraphs;
 
@@ -201,10 +203,14 @@ public void submit() {
         makeP_n(nInputValue);
         break;
       case 1:
+        makeC_n(nInputValue);
         break;
       case 2:
+        makeK_n(nInputValue);
         break;
       case 3:
+        if (p != -1 && q != -1)
+          makeK_pq(p, q);
         break;
       case 4:
         break;
@@ -219,7 +225,13 @@ public void input(String text) {
   try {
     nInputValue = Integer.parseInt(text);
   } catch (NumberFormatException e) { 
-    badInt = true;
+    try {
+      String[] pq = text.split(",");
+      p = Integer.parseInt(pq[0]);
+      q = Integer.parseInt(pq[1]);
+    } catch (NumberFormatException e2) {
+      badInt = true;
+    }
   }
 }
 
@@ -671,6 +683,65 @@ public void makeP_n(int n) {
       edges.add(new Edge(last_vertex, curr));
     }
     last_vertex = curr;
+  }
+}
+
+public void makeC_n(int n) {
+  PVector center = new PVector(600, 500);
+  int radius = 200;
+  float angleBetweenPoints = TAU / n;
+  Vertex last_vertex = new Vertex();
+  Vertex first_vertex = new Vertex();
+  for (int i = 0; i < n; i++) {
+    PVector newVert = (PVector.fromAngle(i * angleBetweenPoints).mult(radius)).add(center);
+    Vertex curr = new Vertex(int(newVert.x), int(newVert.y));
+    vertices.add(curr);
+    first_vertex = (i == 0) ? curr : first_vertex;
+    if (last_vertex.posX != null) {
+     edges.add(new Edge(last_vertex, curr)); 
+    }
+    
+    if (i == n - 1)
+      edges.add(new Edge(curr, first_vertex));
+    last_vertex = curr;
+  }
+}
+
+public void makeK_n(int n) {
+  PVector center = new PVector(600, 500);
+  int radius = 200;
+  float angleBetweenPoints = TAU / n;
+  ArrayList<Vertex> allVerts = new ArrayList<Vertex>();
+  for (int i = 0; i < n; i++) {
+    PVector newVert = (PVector.fromAngle(i * angleBetweenPoints).mult(radius)).add(center);
+    Vertex curr = new Vertex(int(newVert.x), int(newVert.y));
+    vertices.add(curr);
+    allVerts.add(curr);
+    for (Vertex vert : allVerts) {
+     edges.add(new Edge(vert, curr)); 
+    }
+  }
+}
+
+public void makeK_pq(int p, int q) {
+  ArrayList<Vertex> set1 = new ArrayList<Vertex>();
+  ArrayList<Vertex> set2 = new ArrayList<Vertex>();
+  for (int i = 0; i < p; i++) {
+    Vertex curr = new Vertex(300 + i * 75, 300);
+    set1.add(curr);
+    vertices.add(curr);
+  }
+  
+  for (int i = 0; i < q; i++) {
+    Vertex curr = new Vertex(300 + i * 75, 500);
+    set2.add(curr);
+    vertices.add(curr);
+  }
+  
+  for (int i = 0; i < set1.size(); i++) {
+     for (int j = 0; j < set2.size(); j++) {
+       edges.add(new Edge(set1.get(i), set2.get(j)));
+     }
   }
 }
 
