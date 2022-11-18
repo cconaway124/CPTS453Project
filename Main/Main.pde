@@ -196,7 +196,8 @@ public void graph() {
 }
 
 public void submit() {
-  if (commonGraphs != null) {   
+  if (commonGraphs != null) {  
+    n_input.submit();
    submitPressed = true;
    switch (graphNum) {
       case 0:
@@ -756,7 +757,6 @@ void controlEvent(ControlEvent theEvent) {
       // then do stuff, in this case: set the variable selectedImage to the value associated
       // with the item from the dropdownlist (which in this case is either 0 or 1)
       graphNum = int(theEvent.getController().getValue());
-        
       }
     }
   }
