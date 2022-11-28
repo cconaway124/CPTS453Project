@@ -214,11 +214,14 @@ public void submit() {
           makeK_pq(p, q);
         break;
       case 4:
+        // technically makes Q_n, but not pretty
+        makeQ_n(nInputValue);
         break;
       default:
         println("Something went wrong lmao - from switch in submit");
         break;
    }
+   components = getComponents(vertices, edges);
   }
 }
 
@@ -744,6 +747,92 @@ public void makeK_pq(int p, int q) {
        edges.add(new Edge(set1.get(i), set2.get(j)));
      }
   }
+}
+
+public void makeQ_n(int n) {
+ float numVerts = pow(2, n);
+ ArrayList<Vertex> qVerts = new ArrayList<Vertex>();
+ ArrayList<String> binVerts = new ArrayList<String>();
+ for (int i = 0; i < numVerts; i++) {
+   binVerts.add(Integer.toBinaryString(i));
+ }
+ 
+ int x = 250;
+ int y = 250;
+ int maxX = width - 400;
+ int maxY = height - 400;
+ int number = 0;
+ 
+ for (int i = int(numVerts); i > 0; i--) {
+   Vertex newVert = new Vertex();
+  int vertMod = i % 4;
+  switch (vertMod) {
+    case 0:
+      newVert = new Vertex(x + 150 * number, y + 150 * number);
+      println(x + 150 * number, y + 150 * number);
+      break;
+    case 1:
+      newVert = new Vertex(maxX - 150 * number, maxY - 150 * number);
+      println(x + 150 * number, maxY - 150 * number);
+      break;
+    case 2:
+      newVert = new Vertex(x + 150 * number, maxY - 150 * number);
+      println(maxX - 150 * number, maxY - 150 * number);
+      break;
+    case 3:
+      newVert = new Vertex(maxX - 150 * number, y + 150 * number);
+      println(maxX - 150 * number, y + 150 * number);
+      break;
+    default:
+      println("mod 4 exceeded 3 or was negative?? " + vertMod);
+      break;
+  }
+    newVert.setColor(currColor);
+   vertices.add(newVert);
+   println(vertMod);
+   qVerts.add(newVert);
+   if (vertMod == 1)
+     number++;
+ }
+ 
+ /*
+    Vertex newVert = new Vertex(x, y);
+   newVert.setColor(currColor);
+   vertices.add(newVert);
+   qVerts.add(newVert);
+ */
+ 
+ int maxLength = binVerts.get(binVerts.size() - 1).length();
+ 
+ // equalize the length of strings
+ for (int i = 0; i < numVerts; i++) {
+  String currVert = binVerts.get(i);
+  if (currVert.length() < maxLength) {
+   for (int j = maxLength - currVert.length(); j > 0; j--) {
+     currVert = '0' + currVert;
+   }
+   binVerts.set(i, currVert);
+  }
+ }
+ 
+ for (int i = 0; i < binVerts.size(); i++) {
+  String startVert = binVerts.get(i);
+  for (int j = i; j < binVerts.size(); j++) {
+   String endVert = binVerts.get(j);
+   int count = 0;
+   for (int index = 0; index < startVert.length(); index++) {
+     if (startVert.charAt(index) != endVert.charAt(index)) {
+      count++; 
+     }
+   }
+   if (count == 1) {
+    Edge newEdge = new Edge(qVerts.get(i), qVerts.get(j)); 
+    edges.add(newEdge);
+   }
+  }
+ }
+ 
+ 
 }
 
 void controlEvent(ControlEvent theEvent) {
